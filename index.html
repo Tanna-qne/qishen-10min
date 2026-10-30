@@ -61,6 +61,7 @@ button:focus-visible{outline:3px solid var(--work);outline-offset:2px}
 
 .figure-box{background:var(--bg);border-radius:10px;aspect-ratio:4/3;max-width:100%;display:grid;place-items:center;overflow:hidden}
 .figure-box svg,.lib-fig svg{width:100%;height:100%;display:block}
+.photo{width:100%;height:100%;object-fit:contain;background:#fff;display:block;border-radius:inherit}
 .limb{fill:none;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round;stroke-width:9}
 .limb.far{stroke:var(--far)}
 .torso{fill:none;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round;stroke-width:11}
@@ -219,22 +220,31 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
         <button class="toggle" data-f="body" aria-pressed="false">徒手</button>
         <button class="toggle" data-f="db" aria-pressed="false">哑铃</button>
         <button class="toggle" data-f="bar" aria-pressed="false">单杠</button>
+        <button class="toggle" data-f="box" aria-pressed="false">拳击</button>
       </div>
     </div>
     <div class="lib" id="lib"></div>
   </section>
 </div>
 
+<script src="photos.js"></script>
 <script>
 (() => {
   const PREP = 10, WORK = 50;
   const GEAR = { body:'徒手', db:'哑铃', bar:'单杠' };
-  const CAT = { warm:'热身', lower:'下肢', push:'推', pull:'拉', cardio:'心肺', core:'核心', stretch:'拉伸' };
+  const CAT = { warm:'热身', lower:'下肢', push:'推', pull:'拉', cardio:'心肺', core:'核心', stretch:'拉伸', box:'拳击' };
 
   // 姿势常量
   const SQ = {t:36,h:-20,ll1:88,ll2:108,rl1:88,rl2:108,dx:-12};
   const HANG = {la1:172,la2:0,ra1:172,ra2:0,ll1:-5,ll2:75,rl1:-5,rl2:75,lf:10,rf:10};
   const BOTH = (a, b) => Object.assign({}, a, b);
+  // 拳击：左脚在前的格斗姿势，近侧手为前手
+  const GD = {t:5,ll1:14,ll2:12,rl1:-14,rl2:12,rf:70,la1:30,la2:120,ra1:20,ra2:130};
+  const JAB = BOTH(GD,{t:8,la1:88,la2:0});
+  const CROSS = BOTH(GD,{t:18,ra1:88,ra2:0,rf:45,la1:25,la2:125});
+  const HOOK = BOTH(GD,{t:0,la1:80,la2:90});
+  const UPPER = BOTH(GD,{t:14,ra1:35,ra2:135,ll2:24,rl2:24});
+  const DUCK = BOTH(GD,{t:16,ll1:40,ll2:62,rl1:-28,rl2:55});
 
   // ---- 动作库 ----
   // 角度：0 = 竖直向下，正值转向画面右侧。side 视角人物面朝右，l 为近侧肢体，r 为远侧
@@ -396,7 +406,31 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
       frames:[BOTH(HANG,{shrug:6}), BOTH(HANG,{shrug:4,t:-3}), BOTH(HANG,{shrug:6,t:3})],
       cues:['双手握杠，全身放松挂着','屈膝让脚离地，肩膀自然耸起','累了就下来休息几秒再挂'],
       why:'让坐了一小时被压紧的脊柱拉长，同时练握力。', easy:'脚尖点地，只挂一部分体重。' },
+
+    // 拳击连招（数字是拳法编号：1 前手刺拳，2 后手直拳，3 前手勾拳，6 后手上勾拳）
+    { id:'combo12', name:'拳击连招 1-2', tag:'刺拳 + 后手直拳', cat:['cardio','box'], gear:'body', view:'side', period:2.1,
+      frames:[GD, JAB, GD, CROSS, GD, GD],
+      cues:['左脚在前站成格斗姿势，双拳护在下巴前','1 前手刺拳：快出快收','2 后手直拳：后脚跟转、腰胯转，力从脚下来','双脚贴地移动，不跳'],
+      why:'最基础也最常用的连招，先把它打顺。', easy:'放慢速度，只求动作准确。' },
+    { id:'combo112', name:'拳击连招 1-1-2', tag:'双刺拳 + 直拳', cat:['cardio','box'], gear:'body', view:'side', period:2.8,
+      frames:[GD, JAB, GD, JAB, GD, CROSS, GD, GD],
+      cues:['第一下刺拳试探距离，第二下更快','紧接一记后手直拳','每组打完马上回到护脸姿势'],
+      why:'连续刺拳能练出节奏和速度。', easy:'两组之间多停一拍。' },
+    { id:'combo123', name:'拳击连招 1-2-3', tag:'直拳接前手勾拳', cat:['cardio','box'], gear:'body', view:'side', period:2.8,
+      frames:[GD, JAB, GD, CROSS, GD, HOOK, GD, GD],
+      cues:['先打 1-2','3 前手勾拳：手肘抬平，拳头横着打出去','勾拳靠转腰发力，不是甩手臂'],
+      why:'直拳接勾拳，练上身转动，也放松久坐僵硬的胸椎。', easy:'只做 1-2，熟了再加 3。' },
+    { id:'comboduck', name:'拳击连招 1-2-下潜-2', tag:'进攻 + 防守', cat:['cardio','box'], gear:'body', view:'side', period:3.5,
+      frames:[GD, JAB, GD, CROSS, GD, DUCK, GD, CROSS, GD, GD],
+      cues:['打完 1-2 屈膝下潜，像躲开对方的勾拳','用腿蹲下去，背不要弯','站起来马上补一记后手直拳','双脚贴地，不跳'],
+      why:'加入防守动作，腿也一起练到。', easy:'下潜浅一点。' },
+    { id:'combo632', name:'拳击连招 6-3-2', tag:'上勾 + 勾拳 + 直拳', cat:['cardio','box'], gear:'body', view:'side', period:2.8,
+      frames:[GD, UPPER, GD, HOOK, GD, CROSS, GD, GD],
+      cues:['6 后手上勾拳：稍微屈膝，从下往上打','接 3 前手勾拳','最后用 2 后手直拳收尾'],
+      why:'近身组合，三个方向的出拳都练到。', easy:'每一拳之间停一下，先打准再加速。' },
   ];
+  // 照片动作（photos.js）
+  (window.PHOTO_LIB || []).forEach(e => LIB.push(Object.assign({ view:'photo', period:1.4, frames:[], img:'img/' + e.id + '/' }, e)));
   const BY_ID = Object.fromEntries(LIB.map(e => [e.id, e]));
 
   // ---- 火柴人正向运动学 ----
@@ -442,7 +476,20 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     f.torso = mk('path', 'torso', g); f.legA = mk('path', 'limb', g); f.head = mk('circle', 'head', g);
     f.armA = mk('path', 'limb', g); f.bellA = mk('line', 'bell', g);
     f.head.setAttribute('r', L.head);
+    const img = document.createElement('img');
+    img.className = 'photo'; img.alt = label; img.loading = 'lazy'; img.hidden = true;
+    host.appendChild(img); f.img = img;
     return f;
+  }
+
+  // 照片动作交替播放起始/结束两张图，其他动作画火柴人
+  function show(fig, ex, clock, half) {
+    const photo = !!ex.img;
+    fig.svg.style.display = photo ? 'none' : '';
+    fig.img.hidden = !photo;
+    if (!photo) { draw(fig, ex, pose(ex, clock, half)); return; }
+    const src = ex.img + (Math.floor(clock / ex.period) % 2) + '.jpg';
+    if (fig.img.getAttribute('src') !== src) { fig.img.setAttribute('src', src); fig.img.alt = ex.name; }
   }
 
   function placeBell(line, armPts, T) {
@@ -665,6 +712,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
   LIB.forEach(ex => {
     const card = document.createElement('article');
     card.className = 'lib-card'; card.dataset.gear = ex.gear;
+    if (ex.cat.includes('box')) card.dataset.box = '1';
     card.innerHTML = '<div class="lib-fig"></div><div class="nm"></div><div class="meta"><span class="tg"></span><span class="gear"></span></div>';
     card.querySelector('.nm').textContent = ex.name;
     card.querySelector('.tg').textContent = ex.cat.map(c => CAT[c]).join(' · ');
@@ -673,11 +721,13 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     libEl.appendChild(card);
   });
   const counts = LIB.reduce((m, e) => (m[e.gear] = (m[e.gear] || 0) + 1, m), {});
-  $('libCount').textContent = '共 ' + LIB.length + ' 个动作：徒手 ' + counts.body + ' · 哑铃 ' + counts.db + ' · 单杠 ' + counts.bar;
+  $('libCount').textContent = '共 ' + LIB.length + ' 个动作：徒手 ' + counts.body + ' · 哑铃 ' + counts.db + ' · 单杠 ' + counts.bar +
+    '。其中 ' + LIB.filter(e => e.img).length + ' 个用照片示范，照片来自 free-exercise-db（公有领域）';
   $('filters').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
+    const f = b.dataset.f;
     [...$('filters').children].forEach(x => x.setAttribute('aria-pressed', x === b));
-    libFigs.forEach(({ card }) => { card.hidden = b.dataset.f !== 'all' && card.dataset.gear !== b.dataset.f; });
+    libFigs.forEach(({ card }) => { card.hidden = f !== 'all' && (f === 'box' ? !card.dataset.box : card.dataset.gear !== f); });
   });
 
   // ---- 动画 ----
@@ -689,8 +739,8 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     const paused = !st.running && (st.phase === 'prep' || st.phase === 'work');
     if (!paused) clock += dt;
     const ex = plan[st.i];
-    draw(stageFig, ex, pose(ex, clock, st.phase === 'work' && st.half));
-    libFigs.forEach(({ ex, fig, card }) => { if (!card.hidden) draw(fig, ex, pose(ex, reduce ? ex.period * 0.3 : clock, false)); });
+    show(stageFig, ex, clock, st.phase === 'work' && st.half);
+    libFigs.forEach(({ ex, fig, card }) => { if (!card.hidden) show(fig, ex, reduce ? ex.period * 0.3 : clock, false); });
     requestAnimationFrame(frame);
   }
 

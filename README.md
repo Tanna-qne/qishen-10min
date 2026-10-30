@@ -9,3 +9,10 @@
 在线使用：https://hedonotlikeme.com/qishen-10min/
 
 直接用浏览器打开 `index.html` 也能用。
+
+## 动作库
+
+- `index.html` 里的 `LIB`：手绘火柴人动画动作，包括 5 个徒手拳击连招
+- `photos.js`：40 个照片示范动作，照片在 `img/<动作id>/`，来自 [free-exercise-db](https://github.com/yuhonas/free-exercise-db)（公有领域）。只挑了徒手、哑铃、单杠能做，不跳、不需要凳子或台阶的动作
+
+不喜欢某个照片动作：在 `photos.js` 里删掉那一整块 `{ ... }`，再删掉 `img/` 里对应的文件夹。
