@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>起身十分钟</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+/* Layout: a training station — animated coach + countdown on the left, cues and today's 10-move routine on the right; the full move library below. Stacks on phones */
+:root{
+  --bg:#EDF1EF; --surface:#FFFFFF; --ink:#15211D; --muted:#5A6A64; --line:#D5DED9; --far:#A3B3AC;
+  --work:#2747C9; --work-soft:#E4E9FB; --prep:#A86400; --prep-soft:#FBEFD9; --good:#1E7A4F; --iron:#6B4FD8;
+  --font-display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --font-body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1412; --surface:#161E1B; --ink:#E5EDE9; --muted:#93A39D; --line:#27332F; --far:#4F5E58;
+  --work:#8AA2FF; --work-soft:#1E2747; --prep:#F2B552; --prep-soft:#3A2C12; --good:#5FCB95; --iron:#B7A4FF; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1412; --surface:#161E1B; --ink:#E5EDE9; --muted:#93A39D; --line:#27332F; --far:#4F5E58;
+  --work:#8AA2FF; --work-soft:#1E2747; --prep:#F2B552; --prep-soft:#3A2C12; --good:#5FCB95; --iron:#B7A4FF; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.6}
+.wrap{max-width:1120px;margin:0 auto;padding-block:20px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:grid;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--font-display);font-weight:800;font-size:clamp(34px,6vw,48px);line-height:1;margin:0;letter-spacing:.01em}
+.sub{color:var(--muted);margin:4px 0 0}
+.hdr-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);
+  border-radius:999px;padding:5px 12px;font-size:13px;color:var(--muted)}
+.pill b{color:var(--ink);font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.45}
+button:focus-visible{outline:3px solid var(--work);outline-offset:2px}
+.toggle{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px}
+.toggle[aria-pressed="true"]{border-color:var(--work);color:var(--work);background:var(--work-soft)}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px;position:relative}
+.stage-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.chip{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.08em;padding:3px 10px;border-radius:6px;
+  background:var(--work-soft);color:var(--work)}
+.chip.prep{background:var(--prep-soft);color:var(--prep)}
+.chip.idle,.chip.paused{background:var(--bg);color:var(--muted)}
+.chip.done{background:var(--bg);color:var(--good)}
+.gear{display:inline-block;font-size:12px;padding:1px 8px;border-radius:5px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.gear.db{border-color:var(--iron);color:var(--iron)}
+.gear.bar{border-color:var(--prep);color:var(--prep)}
+.ex-name{font-size:clamp(24px,4vw,32px);font-weight:700;margin:6px 0 0;line-height:1.2;text-wrap:balance}
+.ex-tag{color:var(--muted);font-size:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.counter{font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.counter b{color:var(--ink)}
+
+.figure-box{background:var(--bg);border-radius:10px;aspect-ratio:4/3;max-width:100%;display:grid;place-items:center;overflow:hidden}
+.figure-box svg,.lib-fig svg{width:100%;height:100%;display:block}
+.limb{fill:none;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round;stroke-width:9}
+.limb.far{stroke:var(--far)}
+.torso{fill:none;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round;stroke-width:11}
+.head{fill:var(--ink)}
+.bell{stroke:var(--iron);stroke-width:8;stroke-linecap:round}
+.bar{stroke:var(--prep);stroke-width:5;stroke-linecap:round}
+.ground{stroke:var(--line);stroke-width:2}
+.shadow{fill:var(--line)}
+
+.controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ring{position:relative;width:104px;height:104px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .track{fill:none;stroke:var(--line);stroke-width:8}
+.ring .rbar{fill:none;stroke:var(--work);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .2s linear}
+.ring.prep .rbar{stroke:var(--prep)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;
+  font-size:44px;font-variant-numeric:tabular-nums;line-height:1}
+.btns{display:flex;gap:8px;flex-wrap:wrap;flex:1;min-width:0}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;font-weight:500}
+.btn:hover:not(:disabled){border-color:var(--muted)}
+.btn.primary{background:var(--work);border-color:var(--work);color:var(--surface);font-weight:700;padding:10px 20px}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.small{padding:6px 12px;font-size:14px;border-radius:8px}
+.next{color:var(--muted);font-size:14px;margin:0}
+.next b{color:var(--ink);font-weight:500}
+
+.overall{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+.overall span{height:6px;border-radius:3px;background:var(--line);overflow:hidden;position:relative}
+.overall span i{position:absolute;inset:0 auto 0 0;background:var(--work);width:0}
+.time-left{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.done-panel{position:absolute;inset:0;background:var(--surface);border-radius:14px;display:grid;place-content:center;
+  text-align:center;gap:10px;padding:24px}
+.done-panel .big{font-family:var(--font-display);font-weight:800;font-size:64px;line-height:1;color:var(--good)}
+.done-panel p{margin:0;color:var(--muted)}
+
+.side{display:grid;gap:16px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.card h2{font-size:13px;letter-spacing:.1em;color:var(--muted);margin:0 0 10px;font-weight:700}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.card-head h2{margin:0}
+.cues{margin:0;padding:0;list-style:none;display:grid;gap:8px;counter-reset:c}
+.cues li{display:grid;grid-template-columns:22px 1fr;gap:8px}
+.cues li::before{content:counter(c);counter-increment:c;font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--work);line-height:1.5}
+.note{display:grid;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:14px}
+.note div{display:grid;grid-template-columns:4.5em 1fr;gap:8px}
+.note .k{color:var(--muted)}
+
+.equip{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin-bottom:8px}
+.seq{list-style:none;margin:0;padding:0;display:grid}
+.seq button{width:100%;display:grid;grid-template-columns:3.2em 1fr auto;gap:10px;align-items:center;text-align:left;
+  background:none;border:0;border-radius:8px;padding:6px 8px}
+.seq button:hover{background:var(--bg)}
+.seq .t{font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--muted);font-variant-numeric:tabular-nums}
+.seq .n{font-weight:500;min-width:0}
+.seq li.cur button{background:var(--work-soft)}
+.seq li.cur .t{color:var(--work)}
+.seq li.past .n{color:var(--muted)}
+.seq li.past .t::after{content:" ✓";color:var(--good)}
+.foot{font-size:13px;color:var(--muted);margin:0}
+kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;font-size:12px}
+
+.lib-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.lib-head h2{font-family:var(--font-display);font-weight:800;font-size:30px;margin:0;line-height:1;letter-spacing:.01em}
+.lib-head p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.lib-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:6px;align-content:start}
+.lib-fig{background:var(--bg);border-radius:8px;aspect-ratio:4/3}
+.lib-card .nm{font-weight:700;line-height:1.3}
+.lib-card .meta{display:flex;justify-content:space-between;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>起身十分钟</h1>
+      <p class="sub">每坐满一小时，来一轮随机组合的 10 个动作 · 徒手、两个哑铃、一根单杠 · 全程不跳</p>
+    </div>
+    <div class="hdr-right">
+      <span class="pill">今天已完成 <b id="today">0</b> 轮</span>
+      <button class="toggle" id="voice" aria-pressed="true">语音提示：开</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="stage" aria-live="polite">
+      <div class="stage-top">
+        <div>
+          <span class="chip idle" id="chip">准备开始</span>
+          <h2 class="ex-name" id="exName"></h2>
+          <div class="ex-tag"><span id="exTag"></span><span class="gear" id="exGear"></span></div>
+        </div>
+        <div class="counter"><b id="exNo">1</b> / 10</div>
+      </div>
+
+      <div class="figure-box" id="stageFig"></div>
+
+      <div class="overall" id="overall" aria-hidden="true"></div>
+      <div class="time-left"><span id="phaseText"></span><span>剩余 <b id="totalLeft">10:00</b></span></div>
+
+      <div class="controls">
+        <div class="ring" id="ring">
+          <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52"></circle>
+            <circle class="rbar" id="ringBar" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="0"></circle></svg>
+          <div class="num" id="secs">10</div>
+        </div>
+        <div class="btns">
+          <button class="btn primary" id="play">开始 10 分钟</button>
+          <button class="btn" id="prev" aria-label="上一个动作">上一个</button>
+          <button class="btn" id="skip" aria-label="跳过当前动作">跳过</button>
+          <button class="btn" id="reset">重来</button>
+        </div>
+      </div>
+      <p class="next" id="next"></p>
+
+      <div class="done-panel" id="donePanel" hidden>
+        <div class="big">完成</div>
+        <p>今天第 <b id="doneCount">1</b> 轮。下一轮已经换好新动作了。</p>
+        <div><button class="btn primary" id="again">现在再来一轮</button></div>
+      </div>
+    </section>
+
+    <div class="side">
+      <section class="card">
+        <h2>动作要点</h2>
+        <ol class="cues" id="cues"></ol>
+        <div class="note">
+          <div><span class="k">为什么</span><span id="why"></span></div>
+          <div><span class="k">太吃力</span><span id="easy"></span></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-head">
+          <h2>本轮安排</h2>
+          <button class="btn small" id="shuffle">换一组</button>
+        </div>
+        <div class="equip">手边有：
+          <button class="toggle" id="gearDb" aria-pressed="true">哑铃</button>
+          <button class="toggle" id="gearBar" aria-pressed="true">单杠</button>
+        </div>
+        <ol class="seq" id="seq"></ol>
+      </section>
+      <p class="foot">每轮按「热身 → 下肢 → 推 → 拉 → 心肺 → 下肢 → 核心 → 拉伸」随机抽取，尽量避开最近两轮做过的动作。快捷键：<kbd>空格</kbd> 开始 / 暂停，<kbd>→</kbd> 跳过。有伤病或疼痛请做简化版或跳过。</p>
+    </div>
+  </div>
+
+  <section class="lib-wrap" style="display:grid;gap:12px">
+    <div class="lib-head">
+      <div>
+        <h2>动作库</h2>
+        <p id="libCount"></p>
+      </div>
+      <div class="filters" id="filters">
+        <button class="toggle" data-f="all" aria-pressed="true">全部</button>
+        <button class="toggle" data-f="body" aria-pressed="false">徒手</button>
+        <button class="toggle" data-f="db" aria-pressed="false">哑铃</button>
+        <button class="toggle" data-f="bar" aria-pressed="false">单杠</button>
+      </div>
+    </div>
+    <div class="lib" id="lib"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const PREP = 10, WORK = 50;
+  const GEAR = { body:'徒手', db:'哑铃', bar:'单杠' };
+  const CAT = { warm:'热身', lower:'下肢', push:'推', pull:'拉', cardio:'心肺', core:'核心', stretch:'拉伸' };
+
+  // 姿势常量
+  const SQ = {t:36,h:-20,ll1:88,ll2:108,rl1:88,rl2:108,dx:-12};
+  const HANG = {la1:172,la2:0,ra1:172,ra2:0,ll1:-5,ll2:75,rl1:-5,rl2:75,lf:10,rf:10};
+  const BOTH = (a, b) => Object.assign({}, a, b);
+
+  // ---- 动作库 ----
+  // 角度：0 = 竖直向下，正值转向画面右侧。side 视角人物面朝右，l 为近侧肢体，r 为远侧
+  const LIB = [
+    // 热身
+    { id:'march', name:'原地慢速提膝', tag:'唤醒下肢循环', cat:['warm','cardio'], gear:'body', view:'side', period:2.2,
+      frames:[{}, {ll1:78,ll2:100,lf:80,la1:-30,la2:50,ra1:35,ra2:50}, {}, {rl1:78,rl2:100,rf:80,la1:35,la2:50,ra1:-30,ra2:50}],
+      cues:['膝盖慢慢抬到接近髋部的高度','手臂与腿交替前后摆动','脚尖先着地再轻轻放下，不跺地'],
+      why:'久坐时下肢血流变慢，先让心率和腿部循环起来。', easy:'抬低一点，变成原地踏步。' },
+    { id:'shrug', name:'肩部绕环', tag:'放松肩颈', cat:['warm'], gear:'body', view:'front', period:2.4, sided:'换方向', reverse:true,
+      frames:[{}, {shrug:8,la1:-14,ra1:14}, {shrug:4,la1:-6,la2:-14,ra1:6,ra2:14}, {shrug:-2,la1:-8,ra1:8}],
+      cues:['双肩先向上耸到耳朵','向后、向下画尽量大的圆','25 秒后换成向前绕'],
+      why:'盯屏幕时肩膀会不自觉耸起、前扣，绕环能放松肩颈。', easy:'只做耸肩、放下。' },
+    { id:'jack', name:'无跳开合', tag:'提心率 · 不吵', cat:['warm','cardio'], gear:'body', view:'front', period:1.8,
+      frames:[{}, {ll1:-22,la1:-165,ra1:165,la2:0,ra2:0}, {}, {rl1:22,la1:-165,ra1:165,la2:0,ra2:0}],
+      cues:['一只脚向侧面迈出，同时双手举过头顶','收回，再换另一只脚','加快节奏提高心率，但脚不离地'],
+      why:'开合跳的安静版，楼下听不到，心率一样能提上来。', easy:'放慢速度，手只举到肩膀高度。' },
+    { id:'armcircle', name:'手臂大绕环', tag:'打开肩关节', cat:['warm'], gear:'body', view:'front', period:2, sided:'换方向', reverse:true,
+      frames:[{}, {la1:-90,ra1:90,la2:0,ra2:0}, {la1:-170,ra1:170,la2:0,ra2:0}, {la1:-90,ra1:90,la2:0,ra2:0}],
+      cues:['双臂伸直，从体侧画最大的圆','肩膀下沉，不要耸肩','25 秒后反方向绕'],
+      why:'让肩关节在各个方向都活动一遍，为后面的推拉动作热身。', easy:'画小一点的圈。' },
+    { id:'box', name:'空拳出拳', tag:'上身 · 心率', cat:['warm','cardio'], gear:'body', view:'side', period:1,
+      frames:[{t:5,ll1:12,rl1:-12,la1:30,la2:120,ra1:30,ra2:120}, {t:8,ll1:12,rl1:-12,la1:88,la2:0,ra1:30,ra2:120},
+              {t:5,ll1:12,rl1:-12,la1:30,la2:120,ra1:30,ra2:120}, {t:10,ll1:12,rl1:-12,la1:30,la2:120,ra1:88,ra2:0}],
+      cues:['前后分腿站，双拳护在下巴前','左右手交替向前出拳，转动腰胯','出拳后马上收回护脸'],
+      why:'脚不离地也能让全身热起来，还能放松久坐僵硬的胸椎。', easy:'放慢速度，出拳不用全力。' },
+
+    // 下肢
+    { id:'squat', name:'徒手深蹲', tag:'臀腿 · 核心', cat:['lower'], gear:'body', view:'side', period:3.4,
+      frames:[{}, BOTH(SQ,{la1:88,la2:0,ra1:88,ra2:0}), BOTH(SQ,{la1:88,la2:0,ra1:88,ra2:0}), {}],
+      cues:['双脚与肩同宽，脚尖略向外','臀部向后坐，像要坐回椅子','膝盖朝脚尖方向，脚跟不离地'],
+      why:'坐着时臀肌几乎不工作，深蹲把它重新叫醒。', easy:'蹲到碰到椅子就起来。' },
+    { id:'goblet', name:'高脚杯深蹲', tag:'臀腿 · 上背稳定', cat:['lower'], gear:'db', view:'side', period:3.4,
+      frames:[{la1:15,la2:140,ra1:15,ra2:140}, BOTH(SQ,{t:30,h:-15,la1:40,la2:120,ra1:40,ra2:120}),
+              BOTH(SQ,{t:30,h:-15,la1:40,la2:120,ra1:40,ra2:120}), {la1:15,la2:140,ra1:15,ra2:140}],
+      cues:['双手托住一个哑铃的一端，贴在胸前','蹲下时手肘落在膝盖内侧','起身时用脚跟发力，挺胸'],
+      why:'胸前负重让上身自然挺直，比徒手深蹲更能练到臀腿。', easy:'换成更轻的重量，或回到徒手深蹲。' },
+    { id:'rdl', name:'哑铃罗马尼亚硬拉', tag:'大腿后侧 · 臀', cat:['lower'], gear:'db', view:'side', period:4,
+      frames:[{la1:0,la2:0,ra1:0,ra2:0}, {t:80,h:20,dx:-18,ll1:12,ll2:20,rl1:12,rl2:20,la1:0,la2:0,ra1:0,ra2:0},
+              {t:80,h:20,dx:-18,ll1:12,ll2:20,rl1:12,rl2:20,la1:0,la2:0,ra1:0,ra2:0}, {la1:0,la2:0,ra1:0,ra2:0}],
+      cues:['膝盖微屈，臀部向后推','哑铃贴着大腿往下滑到小腿','背始终挺直，大腿后侧有拉伸感就起'],
+      why:'练臀和大腿后侧，同时教会身体用髋发力、不用腰硬拉。', easy:'减轻重量，只下到膝盖高度。' },
+    { id:'lunge', name:'交替后撤弓步', tag:'臀腿 · 平衡', cat:['lower'], gear:'body', view:'side', period:3, sided:'换边', mirror:true,
+      frames:[{}, {ll1:70,ll2:75,rl1:-25,rl2:60,rf:50,la1:20,la2:30,ra1:-20,ra2:30},
+              {ll1:70,ll2:75,rl1:-25,rl2:60,rf:50,la1:20,la2:30,ra1:-20,ra2:30}, {}],
+      cues:['一条腿向后撤一大步','后腿膝盖下沉到接近地面','前脚跟发力站回来，25 秒后换腿'],
+      why:'单腿发力，同时纠正两侧力量不平衡。', easy:'扶着桌子，下得浅一点。' },
+    { id:'dblunge', name:'哑铃后撤弓步', tag:'臀腿 · 负重', cat:['lower'], gear:'db', view:'side', period:3.2, sided:'换边', mirror:true,
+      frames:[{la1:0,la2:0,ra1:0,ra2:0}, {ll1:70,ll2:75,rl1:-25,rl2:60,rf:50,la1:0,la2:0,ra1:0,ra2:0},
+              {ll1:70,ll2:75,rl1:-25,rl2:60,rf:50,la1:0,la2:0,ra1:0,ra2:0}, {la1:0,la2:0,ra1:0,ra2:0}],
+      cues:['双手各拿一个哑铃垂在体侧','后撤步下蹲，上身保持直立','25 秒后换另一条腿'],
+      why:'比徒手弓步强度更高，适合已经觉得太轻松的时候。', easy:'放下哑铃做徒手版。' },
+    { id:'calf', name:'提踵', tag:'小腿 · 下肢回流', cat:['lower'], gear:'body', view:'side', period:2.6,
+      frames:[{la1:-25,la2:95,ra1:-25,ra2:95}, {lf:32,rf:32,la1:-25,la2:95,ra1:-25,ra2:95},
+              {lf:32,rf:32,la1:-25,la2:95,ra1:-25,ra2:95}, {la1:-25,la2:95,ra1:-25,ra2:95}],
+      cues:['脚跟慢慢抬到最高','最高点停 1 秒，再慢慢放下','可以轻扶桌面保持平衡'],
+      why:'小腿肌肉是“第二心脏”，收缩时把下肢血液泵回心脏。', easy:'双手扶桌，幅度小一点。' },
+    { id:'sumo', name:'哑铃相扑深蹲', tag:'大腿内侧 · 臀', cat:['lower'], gear:'db', view:'front', period:3.4,
+      frames:[{ll1:-14,rl1:14,la1:12,la2:0,ra1:-12,ra2:0}, {ll1:-60,ll2:-50,rl1:60,rl2:50,la1:12,la2:0,ra1:-12,ra2:0},
+              {ll1:-60,ll2:-50,rl1:60,rl2:50,la1:12,la2:0,ra1:-12,ra2:0}, {ll1:-14,rl1:14,la1:12,la2:0,ra1:-12,ra2:0}],
+      cues:['双脚比肩宽，脚尖朝外 45°','双手握一个哑铃垂在两腿之间','膝盖朝脚尖方向打开，垂直下蹲'],
+      why:'宽站距更多练到大腿内侧和臀部，也能打开紧绷的髋。', easy:'不拿哑铃，蹲浅一点。' },
+
+    // 推
+    { id:'press', name:'哑铃推举', tag:'肩 · 手臂后侧', cat:['push'], gear:'db', view:'front', period:2.6,
+      frames:[{la1:-75,la2:-105,ra1:75,ra2:105}, {la1:-165,la2:0,ra1:165,ra2:0}, {la1:-165,la2:0,ra1:165,ra2:0}, {la1:-75,la2:-105,ra1:75,ra2:105}],
+      cues:['哑铃放在肩膀两侧，掌心朝前','向上推到手臂伸直，不要锁死手肘','收紧腹部，别向后仰'],
+      why:'练肩和手臂，也是对抗耸肩、含胸的好动作。', easy:'换轻一点，或一次只推一侧。' },
+    { id:'lateral', name:'哑铃侧平举', tag:'肩中束', cat:['push'], gear:'db', view:'front', period:2.6,
+      frames:[{la1:-12,la2:0,ra1:12,ra2:0}, {la1:-88,la2:0,ra1:88,ra2:0}, {la1:-12,la2:0,ra1:12,ra2:0}],
+      cues:['手臂微屈，从体侧抬到肩膀高度','抬起时想象手肘带着哑铃走','慢慢放下，不要甩'],
+      why:'肩部线条更宽，同时锻炼肩关节稳定性。', easy:'只抬到 45°，或空手做。' },
+    { id:'front', name:'哑铃前平举', tag:'肩前束', cat:['push'], gear:'db', view:'side', period:2.6,
+      frames:[{la1:5,la2:0,ra1:5,ra2:0}, {la1:90,la2:0,ra1:90,ra2:0}, {la1:5,la2:0,ra1:5,ra2:0}],
+      cues:['手臂伸直，向前抬到肩膀高度','身体不要前后晃','慢慢放回大腿前侧'],
+      why:'练肩前侧，也能检验你站得稳不稳。', easy:'两只手轮流抬。' },
+    { id:'triceps', name:'哑铃颈后臂屈伸', tag:'手臂后侧', cat:['push'], gear:'db', view:'side', period:2.8,
+      frames:[{la1:178,la2:0,ra1:178,ra2:0}, {la1:165,la2:165,ra1:165,ra2:165}, {la1:165,la2:165,ra1:165,ra2:165}, {la1:178,la2:0,ra1:178,ra2:0}],
+      cues:['双手托一个哑铃举过头顶','大臂不动，小臂向脑后放下','用手臂后侧发力推回顶端'],
+      why:'针对手臂后侧，同时拉伸久坐后变紧的背阔肌。', easy:'坐着做，或换更轻的哑铃。' },
+
+    // 拉
+    { id:'ytw', name:'Y-T-W 扩胸', tag:'上背 · 改善含胸', cat:['pull'], gear:'body', view:'front', period:8,
+      frames:[{}, {la1:-150,la2:0,ra1:150,ra2:0}, {la1:-150,la2:0,ra1:150,ra2:0}, {la1:-90,la2:0,ra1:90,ra2:0},
+              {la1:-90,la2:0,ra1:90,ra2:0}, {la1:-50,la2:-105,ra1:50,ra2:105}, {la1:-50,la2:-105,ra1:50,ra2:105}],
+      cues:['手臂依次举成 Y、T、W 字形','每个姿势夹紧肩胛骨停 1 秒','收紧腹部，不要塌腰'],
+      why:'对抗驼背，激活久坐后变弱的中下斜方肌和菱形肌。', easy:'只做 T 和 W，手臂放低一点。' },
+    { id:'row', name:'哑铃俯身划船', tag:'背 · 手臂', cat:['pull'], gear:'db', view:'side', period:2.6,
+      frames:[{t:65,h:15,dx:-14,ll1:20,ll2:35,rl1:20,rl2:35,la1:0,la2:0,ra1:0,ra2:0},
+              {t:65,h:15,dx:-14,ll1:20,ll2:35,rl1:20,rl2:35,la1:-95,la2:95,ra1:-95,ra2:95},
+              {t:65,h:15,dx:-14,ll1:20,ll2:35,rl1:20,rl2:35,la1:0,la2:0,ra1:0,ra2:0}],
+      cues:['膝盖微屈，上身前倾约 45°','手肘向后上方拉，哑铃贴近腰','顶端夹紧肩胛骨，再慢慢放下'],
+      why:'练整个背部，是坐姿驼背的直接“解药”。', easy:'一只手撑桌子，单手轮流拉。' },
+    { id:'curl', name:'哑铃弯举', tag:'手臂前侧', cat:['pull'], gear:'db', view:'side', period:2.4,
+      frames:[{la1:0,la2:0,ra1:0,ra2:0}, {la1:5,la2:145,ra1:5,ra2:145}, {la1:0,la2:0,ra1:0,ra2:0}],
+      cues:['大臂贴住身体两侧不动','弯起到哑铃接近肩膀','放下时慢 2 秒'],
+      why:'练手臂前侧和握力，也为引体向上打基础。', easy:'两只手轮流做。' },
+    { id:'pullup', name:'引体向上', tag:'背 · 手臂', cat:['pull'], gear:'bar', view:'side', period:3.2, hang:true,
+      frames:[HANG, BOTH(HANG,{la1:25,la2:150,ra1:25,ra2:150,t:-5}), BOTH(HANG,{la1:25,la2:150,ra1:25,ra2:150,t:-5}), HANG],
+      cues:['双手略比肩宽握杠，屈膝悬垂','先下沉肩膀，再拉到下巴过杠','慢慢放到手臂伸直；下杠时脚尖先着地，别跳下来'],
+      why:'背部和手臂的王牌动作，把坐姿压扁的上背重新撑起来。', easy:'跳上去后用 3 到 5 秒慢慢下放。' },
+    { id:'scap', name:'肩胛引体', tag:'下斜方肌 · 肩稳定', cat:['pull'], gear:'bar', view:'side', period:2.4, hang:true,
+      frames:[BOTH(HANG,{shrug:6}), BOTH(HANG,{shrug:-5}), BOTH(HANG,{shrug:-5}), BOTH(HANG,{shrug:6})],
+      cues:['手臂伸直悬挂，肩膀放松耸起','只靠肩胛骨下沉把身体抬高几厘米','手肘全程不弯曲'],
+      why:'训练肩胛下沉，这是正确引体和好体态的基础。', easy:'脚尖点地减轻体重。' },
+
+    // 核心
+    { id:'kneeraise', name:'悬垂屈膝举腿', tag:'腹部 · 握力', cat:['core'], gear:'bar', view:'side', period:3, hang:true,
+      frames:[HANG, BOTH(HANG,{ll1:95,ll2:100,rl1:95,rl2:100,lf:90,rf:90,t:-8}), BOTH(HANG,{ll1:95,ll2:100,rl1:95,rl2:100,lf:90,rf:90,t:-8}), HANG],
+      cues:['双手握杠悬挂，身体不要晃','收腹把膝盖抬到腰的高度','慢慢放下，控制住摆动'],
+      why:'练腹部的同时给腰椎减压，久坐族很适合。', easy:'只做悬挂，或一次抬一条腿。' },
+    { id:'sidebenddb', name:'哑铃侧屈', tag:'侧腹', cat:['core'], gear:'db', view:'front', period:4,
+      frames:[{la1:-4,la2:0,ra1:4,ra2:0}, {t:-18,dx:4,la1:-4,la2:0,ra1:8,ra2:0}, {la1:-4,la2:0,ra1:4,ra2:0}, {t:18,dx:-4,la1:-8,la2:0,ra1:4,ra2:0}],
+      cues:['双手各拿一个哑铃垂在体侧','上身向左、向右交替侧弯','只弯腰侧，臀部不动'],
+      why:'练侧腹，帮助稳定脊柱。', easy:'只拿一个哑铃或空手做。' },
+    { id:'crunch', name:'站姿提膝卷腹', tag:'腹部', cat:['core'], gear:'body', view:'side', period:2,
+      frames:[{la1:-130,la2:-123,ra1:-130,ra2:-123}, {t:22,ll1:90,ll2:95,la1:-108,la2:-123,ra1:-108,ra2:-123},
+              {la1:-130,la2:-123,ra1:-130,ra2:-123}, {t:22,rl1:90,rl2:95,la1:-108,la2:-123,ra1:-108,ra2:-123}],
+      cues:['双手放在耳朵两侧','卷起上身，同时抬起一侧膝盖','左右交替，呼气时收紧腹部'],
+      why:'不用趴在地上也能练腹，办公室也能做。', easy:'放慢速度，膝盖抬低一点。' },
+
+    // 心肺
+    { id:'thruster', name:'哑铃深蹲推举', tag:'全身', cat:['cardio'], gear:'db', view:'side', period:2.6,
+      frames:[{la1:20,la2:150,ra1:20,ra2:150}, BOTH(SQ,{t:30,h:-15,la1:30,la2:140,ra1:30,ra2:140}),
+              {la1:20,la2:150,ra1:20,ra2:150}, {la1:175,la2:0,ra1:178,ra2:0}],
+      cues:['哑铃放在肩膀上，先蹲下','站起时借腿的力量把哑铃推过头','连贯做，保持呼吸节奏'],
+      why:'一个动作动到全身，心率上得快。', easy:'换轻哑铃，或拆成先蹲、再推。' },
+
+    // 拉伸
+    { id:'lungestretch', name:'弓步拉伸', tag:'髋屈肌 · 下背', cat:['stretch'], gear:'body', view:'side', period:4, sided:'换边', mirror:true,
+      frames:[{t:-6,ll1:62,ll2:70,rl1:-15,rl2:55,rf:50,la1:172,la2:0,ra1:176,ra2:0},
+              {t:-10,ll1:66,ll2:76,rl1:-20,rl2:55,rf:50,la1:172,la2:0,ra1:176,ra2:0}],
+      cues:['前腿屈膝，后腿向后伸展','收紧后侧臀部，骨盆轻轻向前推','双手上举，感受髋部前侧被拉开'],
+      why:'久坐让髋屈肌一直处于缩短状态，这是腰酸的常见原因。', easy:'扶着椅背，步子迈小一点。' },
+    { id:'fold', name:'站姿体前屈', tag:'大腿后侧 · 背部', cat:['stretch'], gear:'body', view:'side', period:7,
+      frames:[{}, {t:100,h:25,dx:-14,ll1:10,ll2:18,rl1:10,rl2:18,la1:2,la2:0,ra1:-2,ra2:0},
+              {t:100,h:25,dx:-14,ll1:10,ll2:18,rl1:10,rl2:18,la1:2,la2:0,ra1:-2,ra2:0}, {}],
+      cues:['膝盖微屈，从髋部向前折叠','头和手臂自然垂下，放松脖子','起身时慢慢卷起，一节一节站直'],
+      why:'拉伸大腿后侧，缓解长时间坐姿带来的背部紧张。', easy:'双手扶膝盖或桌沿，弯到有感觉就停。' },
+    { id:'sidebend', name:'站姿侧弯', tag:'侧腰 · 背阔肌', cat:['stretch'], gear:'body', view:'front', period:7,
+      frames:[{}, {t:20,dx:-5,la1:150,la2:-30,ra1:18,ra2:0}, {t:20,dx:-5,la1:150,la2:-30,ra1:18,ra2:0},
+              {}, {t:-20,dx:5,ra1:-150,ra2:30,la1:-18,la2:0}, {t:-20,dx:5,ra1:-150,ra2:30,la1:-18,la2:0}],
+      cues:['一只手举过头顶，向另一侧弯','臀部保持不动，只弯上半身','侧腰有拉伸感时停 2 到 3 秒'],
+      why:'打开肋骨侧面，呼吸会更深。', easy:'手放在脑后，幅度小一点。' },
+    { id:'neck', name:'颈部拉伸 + 深呼吸', tag:'颈部 · 收尾放松', cat:['stretch'], gear:'body', view:'front', period:9,
+      frames:[{}, {h:30,shrug:-2}, {h:30,shrug:-2}, {}, {h:-30,shrug:-2}, {h:-30,shrug:-2}],
+      cues:['头慢慢倒向一侧肩膀，肩膀下沉','每侧停 4 秒左右，再换另一侧','鼻子吸气 4 秒，嘴巴呼气 6 秒'],
+      why:'让心率降下来，带着清醒的状态回到工作。', easy:'坐着做也可以。' },
+    { id:'quad', name:'站姿股四头肌拉伸', tag:'大腿前侧', cat:['stretch'], gear:'body', view:'side', period:5, sided:'换边', mirror:true,
+      frames:[{t:-10,ll1:-20,ll2:150,lf:-150,la1:-16,la2:0,ra1:60,ra2:10}, {t:-8,ll1:-24,ll2:150,lf:-150,la1:-18,la2:0,ra1:65,ra2:10}],
+      cues:['单手抓住同侧脚背，拉向臀部','两侧膝盖靠拢，骨盆轻轻前推','另一只手扶墙或桌子，25 秒后换腿'],
+      why:'大腿前侧在坐姿下长时间缩短，拉开能减轻膝盖和腰的压力。', easy:'抓不到脚就用毛巾套住脚背。' },
+    { id:'chest', name:'背后扣手扩胸', tag:'胸 · 肩前侧', cat:['stretch'], gear:'body', view:'side', period:5,
+      frames:[{t:-4,h:-6,la1:-30,la2:0,ra1:-30,ra2:0}, {t:-8,h:-12,shrug:-2,la1:-48,la2:0,ra1:-48,ra2:0},
+              {t:-8,h:-12,shrug:-2,la1:-48,la2:0,ra1:-48,ra2:0}, {t:-4,h:-6,la1:-30,la2:0,ra1:-30,ra2:0}],
+      cues:['双手在背后十指交扣','手臂伸直向后、向上抬','挺胸，下巴微收，保持呼吸'],
+      why:'打开打字时一直内扣的胸口和肩膀。', easy:'双手抓一条毛巾，握距宽一点。' },
+    { id:'deadhang', name:'单杠悬垂放松', tag:'脊柱减压 · 握力', cat:['stretch'], gear:'bar', view:'side', period:6, hang:true,
+      frames:[BOTH(HANG,{shrug:6}), BOTH(HANG,{shrug:4,t:-3}), BOTH(HANG,{shrug:6,t:3})],
+      cues:['双手握杠，全身放松挂着','屈膝让脚离地，肩膀自然耸起','累了就下来休息几秒再挂'],
+      why:'让坐了一小时被压紧的脊柱拉长，同时练握力。', easy:'脚尖点地，只挂一部分体重。' },
+  ];
+  const BY_ID = Object.fromEntries(LIB.map(e => [e.id, e]));
+
+  // ---- 火柴人正向运动学 ----
+  const L = { torso:58, neck:9, head:11, ua:28, fa:26, th:36, sh:36 };
+  const GROUND = 222, CX = 120, BAR = 67;
+  const DEF = {
+    side:  {t:0,h:0,la1:6,la2:10,ra1:-6,ra2:10,ll1:0,ll2:0,rl1:0,rl2:0,lf:90,rf:90,lift:0,shrug:0,dx:0},
+    front: {t:0,h:0,la1:-10,la2:-6,ra1:10,ra2:6,ll1:-4,ll2:0,rl1:4,rl2:0,lf:-90,rf:90,lift:0,shrug:0,dx:0},
+  };
+  const rad = d => d * Math.PI / 180;
+  const dir = a => [Math.sin(rad(a)), Math.cos(rad(a))];
+  const add = (p, d, len) => [p[0] + d[0] * len, p[1] + d[1] * len];
+  const ease = x => x * x * (3 - 2 * x);
+  LIB.forEach(ex => { ex.poses = ex.frames.map(f => Object.assign({}, DEF[ex.view], f)); });
+
+  function pose(ex, clock, secondHalf) {
+    let ph = (clock / ex.period) % 1;
+    if (secondHalf && ex.reverse) ph = 1 - ph;
+    const n = ex.poses.length, s = ph * n, i = Math.floor(s) % n, f = ease(s - Math.floor(s));
+    const a = ex.poses[i], b = ex.poses[(i + 1) % n], p = {};
+    for (const k in a) p[k] = a[k] + (b[k] - a[k]) * f;
+    if (secondHalf && ex.mirror) {
+      for (const [x, y] of [['la1','ra1'],['la2','ra2'],['ll1','rl1'],['ll2','rl2'],['lf','rf']]) [p[x], p[y]] = [p[y], p[x]];
+    }
+    return p;
+  }
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const mk = (tag, cls, parent) => { const n = document.createElementNS(NS, tag); if (cls) n.setAttribute('class', cls); parent.appendChild(n); return n; };
+  const pathOf = pts => pts.map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' ');
+
+  function makeFigure(host, label) {
+    const svg = mk('svg', '', host);
+    svg.setAttribute('viewBox', '0 0 240 180'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', label);
+    const shadow = mk('ellipse', 'shadow', svg); shadow.setAttribute('cy', 167); shadow.setAttribute('ry', 4);
+    const ground = mk('line', 'ground', svg);
+    ground.setAttribute('x1', 20); ground.setAttribute('y1', 165); ground.setAttribute('x2', 220); ground.setAttribute('y2', 165);
+    const g = mk('g', '', svg);
+    const bar = mk('line', 'bar', g);
+    bar.setAttribute('x1', CX - 46); bar.setAttribute('x2', CX + 46); bar.setAttribute('y1', BAR); bar.setAttribute('y2', BAR);
+    const f = { svg, g, shadow, bar };
+    f.legB = mk('path', 'limb far', g); f.armB = mk('path', 'limb far', g); f.bellB = mk('line', 'bell', g);
+    f.torso = mk('path', 'torso', g); f.legA = mk('path', 'limb', g); f.head = mk('circle', 'head', g);
+    f.armA = mk('path', 'limb', g); f.bellA = mk('line', 'bell', g);
+    f.head.setAttribute('r', L.head);
+    return f;
+  }
+
+  function placeBell(line, armPts, T) {
+    const [e, h] = [armPts[1], armPts[2]];
+    const len = Math.hypot(h[0] - e[0], h[1] - e[1]) || 1;
+    const n = [-(h[1] - e[1]) / len, (h[0] - e[0]) / len];
+    const [a, b] = T([[h[0] - n[0] * 7, h[1] - n[1] * 7], [h[0] + n[0] * 7, h[1] + n[1] * 7]]);
+    line.setAttribute('x1', a[0].toFixed(1)); line.setAttribute('y1', a[1].toFixed(1));
+    line.setAttribute('x2', b[0].toFixed(1)); line.setAttribute('y2', b[1].toFixed(1));
+  }
+
+  function draw(fig, ex, p) {
+    const front = ex.view === 'front', hs = front ? 8 : 0, ss = front ? 13 : 0, ft = front ? 7 : 10;
+    const up = [Math.sin(rad(p.t)), -Math.cos(rad(p.t))], perp = [Math.cos(rad(p.t)), Math.sin(rad(p.t))];
+    const top = [up[0] * L.torso, up[1] * L.torso];
+    const sc = [top[0], top[1] - p.shrug];
+    const ls = [sc[0] - perp[0] * ss, sc[1] - perp[1] * ss], rs = [sc[0] + perp[0] * ss, sc[1] + perp[1] * ss];
+    const hu = [Math.sin(rad(p.t + p.h)), -Math.cos(rad(p.t + p.h))];
+    const hc = add(add([0, 0], up, L.torso + 2), hu, L.neck + L.head);
+    const arm = (s, a1, a2) => { const e = add(s, dir(a1), L.ua); return [s, e, add(e, dir(a1 + a2), L.fa)]; };
+    const leg = (h, l1, l2, f) => { const k = add(h, dir(l1), L.th), a = add(k, dir(l1 - l2), L.sh); return [h, k, a, add(a, dir(f), ft)]; };
+    const LA = arm(ls, p.la1, p.la2), RA = arm(rs, p.ra1, p.ra2);
+    const LL = leg([-hs, 0], p.ll1, p.ll2, p.lf), RL = leg([hs, 0], p.rl1, p.rl2, p.rf);
+    let ox, oy;
+    if (ex.hang) { ox = CX - LA[2][0]; oy = BAR - LA[2][1]; }
+    else { ox = CX + p.dx; oy = GROUND - Math.max(LL[2][1], LL[3][1], RL[2][1], RL[3][1]) - p.lift; }
+    const T = pts => pts.map(q => [q[0] + ox, q[1] + oy]);
+
+    fig.legA.setAttribute('d', pathOf(T(LL)));
+    fig.legB.setAttribute('d', pathOf(T(RL)));
+    fig.armA.setAttribute('d', pathOf(T(LA)));
+    fig.armB.setAttribute('d', pathOf(T(RA)));
+    fig.torso.setAttribute('d', (front ? pathOf(T([ls, rs])) + ' ' + pathOf(T([[-hs, 0], [hs, 0]])) + ' ' : '') + pathOf(T([[0, 0], top])));
+    const h = T([hc])[0];
+    fig.head.setAttribute('cx', h[0].toFixed(1)); fig.head.setAttribute('cy', h[1].toFixed(1));
+    fig.legB.classList.toggle('far', !front); fig.armB.classList.toggle('far', !front);
+    const db = ex.gear === 'db';
+    fig.bellA.style.display = fig.bellB.style.display = db ? '' : 'none';
+    if (db) { placeBell(fig.bellA, LA, T); placeBell(fig.bellB, RA, T); }
+    fig.bar.style.display = ex.hang ? '' : 'none';
+    // 悬垂动作整体缩小，保证单杠和脚都在画面里
+    const s = ex.hang ? 0.8 : 1;
+    fig.g.setAttribute('transform', 'translate(0,-57) translate(' + CX + ',' + GROUND + ') scale(' + s + ') translate(' + -CX + ',' + -GROUND + ')');
+    const sx = CX + (ox - CX) * s;
+    fig.shadow.setAttribute('cx', sx.toFixed(1));
+    fig.shadow.setAttribute('rx', ((ex.hang ? 22 : 34) - p.lift * 1.2).toFixed(1));
+  }
+
+  // ---- 存储（仅本浏览器） ----
+  const store = {
+    get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  };
+  const gear = store.get('qishen-gear', { db:true, bar:true });
+  let history = store.get('qishen-history', []);
+
+  // ---- 随机编排 ----
+  const SLOTS = ['warm','warm','lower','push','pull','cardio','lower','core','stretch','stretch'];
+  const FALLBACK = ['lower','pull','core','cardio','push'];
+  const pickOne = arr => arr[Math.floor(Math.random() * arr.length)];
+  function makePlan() {
+    const avail = LIB.filter(e => e.gear === 'body' || gear[e.gear]);
+    const recent = new Set(history.flat());
+    const used = new Set(), plan = [];
+    for (const slot of SLOTS) {
+      let pool = avail.filter(e => e.cat.includes(slot) && !used.has(e.id));
+      if (!pool.length) pool = avail.filter(e => e.cat.some(c => FALLBACK.includes(c)) && !used.has(e.id));
+      const fresh = pool.filter(e => !recent.has(e.id));
+      const pick = pickOne(fresh.length ? fresh : pool);
+      used.add(pick.id); plan.push(pick);
+    }
+    store.set('qishen-plan', plan.map(e => e.id));
+    return plan;
+  }
+  let plan = (() => {
+    const ids = store.get('qishen-plan', null);
+    if (Array.isArray(ids) && ids.length === 10 && ids.every(id => BY_ID[id] && (BY_ID[id].gear === 'body' || gear[BY_ID[id].gear])))
+      return ids.map(id => BY_ID[id]);
+    return makePlan();
+  })();
+
+  // ---- 计时、语音、记录 ----
+  const st = { i:0, phase:'idle', running:false, endAt:0, remain:PREP * 1000, half:false, lastSec:null };
+  let voiceOn = true, audio = null, wake = null;
+
+  function say(text) {
+    if (!voiceOn || !('speechSynthesis' in window)) return;
+    try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 1.05; speechSynthesis.speak(u); } catch (e) {}
+  }
+  function beep(freq, ms) {
+    if (!voiceOn || !audio) return;
+    try {
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.frequency.value = freq; o.connect(g); g.connect(audio.destination);
+      g.gain.setValueAtTime(0.18, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + ms / 1000);
+      o.start(); o.stop(audio.currentTime + ms / 1000);
+    } catch (e) {}
+  }
+  function unlockAudio() {
+    try { if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {}
+    try { if (navigator.wakeLock && !wake) navigator.wakeLock.request('screen').then(w => { wake = w; w.addEventListener('release', () => { wake = null; }); }).catch(() => {}); } catch (e) {}
+  }
+
+  const todayKey = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+  const $ = id => document.getElementById(id);
+  $('today').textContent = store.get('qishen-log', {})[todayKey()] || 0;
+
+  function go(i, phase) {
+    st.i = i; st.phase = phase; st.half = false; st.lastSec = null;
+    st.remain = (phase === 'prep' ? PREP : WORK) * 1000;
+    st.endAt = performance.now() + st.remain;
+    const ex = plan[i];
+    if (phase === 'prep') say((i === 0 ? '第一个动作，' : '下一个，') + ex.name);
+    else { beep(880, 250); say('开始'); }
+    render();
+  }
+  function advance() {
+    if (st.phase === 'prep') go(st.i, 'work');
+    else if (st.i < plan.length - 1) go(st.i + 1, 'prep');
+    else finish();
+  }
+  function finish() {
+    st.phase = 'done'; st.running = false; st.remain = 0;
+    const log = store.get('qishen-log', {}), k = todayKey(); log[k] = (log[k] || 0) + 1; store.set('qishen-log', log);
+    $('today').textContent = log[k]; $('doneCount').textContent = log[k];
+    history = [plan.map(e => e.id)].concat(history).slice(0, 2); store.set('qishen-history', history);
+    beep(660, 200); setTimeout(() => beep(990, 350), 220);
+    say('完成，今天也动起来了');
+    try { if (wake) wake.release(); } catch (e) {}
+    render();
+  }
+  function start() {
+    unlockAudio();
+    if (st.phase === 'done') { plan = makePlan(); buildSeq(); }
+    if (st.phase === 'idle' || st.phase === 'done') { st.running = true; go(0, 'prep'); return; }
+    if (st.running) { st.running = false; st.remain = Math.max(0, st.endAt - performance.now()); }
+    else { st.running = true; st.endAt = performance.now() + st.remain; }
+    render();
+  }
+  function reset() {
+    st.i = 0; st.phase = 'idle'; st.running = false; st.remain = PREP * 1000;
+    try { speechSynthesis.cancel(); } catch (e) {}
+    render();
+  }
+
+  function tick() {
+    if (!st.running) return;
+    const rem = st.endAt - performance.now();
+    if (rem <= 0) { advance(); return; }
+    st.remain = rem;
+    const sec = Math.ceil(rem / 1000);
+    if (sec !== st.lastSec) { st.lastSec = sec; if (sec <= 3) beep(st.phase === 'prep' ? 520 : 600, 120); }
+    const ex = plan[st.i];
+    if (st.phase === 'work' && ex.sided && !st.half && rem <= WORK * 500) { st.half = true; beep(740, 200); say(ex.sided); }
+    renderTime();
+  }
+
+  // ---- 渲染 ----
+  const fmt = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+  const seq = $('seq'), overall = $('overall');
+  for (let i = 0; i < 10; i++) overall.appendChild(document.createElement('span')).appendChild(document.createElement('i'));
+  const gearChip = (node, g) => { node.textContent = GEAR[g]; node.className = 'gear ' + g; };
+
+  function buildSeq() {
+    seq.innerHTML = '';
+    plan.forEach((ex, i) => {
+      const li = document.createElement('li');
+      li.innerHTML = '<button type="button"><span class="t">' + fmt(i * 60) + '</span><span class="n"></span><span class="gear"></span></button>';
+      li.querySelector('.n').textContent = ex.name;
+      gearChip(li.querySelector('.gear'), ex.gear);
+      li.querySelector('button').addEventListener('click', () => { unlockAudio(); st.running = true; go(i, 'prep'); });
+      seq.appendChild(li);
+    });
+    render();
+  }
+
+  function renderTime() {
+    const dur = (st.phase === 'work' ? WORK : PREP) * 1000;
+    const rem = st.phase === 'done' ? 0 : st.remain;
+    $('secs').textContent = Math.ceil(rem / 1000);
+    $('ringBar').setAttribute('stroke-dashoffset', (326.73 * (1 - rem / dur)).toFixed(1));
+    const inMove = st.phase === 'work' ? PREP + (WORK * 1000 - rem) / 1000 : st.phase === 'prep' ? (PREP * 1000 - rem) / 1000 : 0;
+    const elapsed = st.phase === 'done' ? 600 : st.i * 60 + inMove;
+    $('totalLeft').textContent = fmt(Math.max(0, Math.ceil(600 - elapsed)));
+    [...overall.children].forEach((s, i) => {
+      s.firstChild.style.width = (st.phase === 'done' || i < st.i ? 100 : i === st.i ? inMove / 60 * 100 : 0) + '%';
+    });
+  }
+
+  function render() {
+    const ex = plan[st.i], ph = st.phase;
+    $('exName').textContent = ex.name; $('exTag').textContent = ex.tag; $('exNo').textContent = st.i + 1;
+    gearChip($('exGear'), ex.gear);
+    const chip = $('chip');
+    chip.textContent = ph === 'idle' ? '准备开始' : ph === 'done' ? '已完成' : !st.running ? '已暂停' : ph === 'prep' ? '准备' : '进行中';
+    chip.className = 'chip ' + (ph === 'idle' ? 'idle' : ph === 'done' ? 'done' : !st.running ? 'paused' : ph === 'prep' ? 'prep' : '');
+    $('ring').classList.toggle('prep', ph !== 'work');
+    $('play').textContent = ph === 'idle' ? '开始 10 分钟' : ph === 'done' ? '再来一轮' : st.running ? '暂停' : '继续';
+    $('phaseText').textContent = ph === 'idle' ? '按「开始」进入第一个动作的 10 秒准备'
+      : ph === 'prep' ? '准备姿势，10 秒后开始' : ph === 'work' ? (ex.sided ? '50 秒，过半时' + ex.sided : '50 秒，跟着节奏做') : '十分钟完成';
+    const nx = plan[st.i + 1];
+    $('next').innerHTML = nx ? '下一个：<b></b>' : '这是最后一个动作';
+    if (nx) $('next').querySelector('b').textContent = nx.name;
+    const cues = $('cues'); cues.innerHTML = '';
+    ex.cues.forEach(c => { const li = document.createElement('li'); li.textContent = c; cues.appendChild(li); });
+    $('why').textContent = ex.why; $('easy').textContent = ex.easy;
+    [...seq.children].forEach((li, i) => {
+      li.classList.toggle('cur', ph !== 'done' && i === st.i);
+      li.classList.toggle('past', ph === 'done' || i < st.i);
+    });
+    const locked = ph === 'prep' || ph === 'work';
+    $('shuffle').disabled = locked; $('gearDb').disabled = locked; $('gearBar').disabled = locked;
+    $('donePanel').hidden = ph !== 'done';
+    renderTime();
+  }
+
+  // ---- 动作库网格 ----
+  const libFigs = [];
+  const libEl = $('lib');
+  LIB.forEach(ex => {
+    const card = document.createElement('article');
+    card.className = 'lib-card'; card.dataset.gear = ex.gear;
+    card.innerHTML = '<div class="lib-fig"></div><div class="nm"></div><div class="meta"><span class="tg"></span><span class="gear"></span></div>';
+    card.querySelector('.nm').textContent = ex.name;
+    card.querySelector('.tg').textContent = ex.cat.map(c => CAT[c]).join(' · ');
+    gearChip(card.querySelector('.gear'), ex.gear);
+    libFigs.push({ ex, fig: makeFigure(card.querySelector('.lib-fig'), ex.name + '示范'), card });
+    libEl.appendChild(card);
+  });
+  const counts = LIB.reduce((m, e) => (m[e.gear] = (m[e.gear] || 0) + 1, m), {});
+  $('libCount').textContent = '共 ' + LIB.length + ' 个动作：徒手 ' + counts.body + ' · 哑铃 ' + counts.db + ' · 单杠 ' + counts.bar;
+  $('filters').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    [...$('filters').children].forEach(x => x.setAttribute('aria-pressed', x === b));
+    libFigs.forEach(({ card }) => { card.hidden = b.dataset.f !== 'all' && card.dataset.gear !== b.dataset.f; });
+  });
+
+  // ---- 动画 ----
+  const stageFig = makeFigure($('stageFig'), '动作示范动画');
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let clock = 0, last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    const paused = !st.running && (st.phase === 'prep' || st.phase === 'work');
+    if (!paused) clock += dt;
+    const ex = plan[st.i];
+    draw(stageFig, ex, pose(ex, clock, st.phase === 'work' && st.half));
+    libFigs.forEach(({ ex, fig, card }) => { if (!card.hidden) draw(fig, ex, pose(ex, reduce ? ex.period * 0.3 : clock, false)); });
+    requestAnimationFrame(frame);
+  }
+
+  // ---- 事件 ----
+  $('play').addEventListener('click', start);
+  $('again').addEventListener('click', start);
+  $('reset').addEventListener('click', reset);
+  $('skip').addEventListener('click', () => {
+    if (st.phase === 'done') return; unlockAudio(); st.running = true;
+    if (st.i < plan.length - 1) go(st.i + 1, 'prep'); else finish();
+  });
+  $('prev').addEventListener('click', () => {
+    if (st.phase === 'idle' || st.phase === 'done') return; unlockAudio(); st.running = true;
+    go(Math.max(0, st.i - (st.phase === 'prep' ? 1 : 0)), 'prep');
+  });
+  $('shuffle').addEventListener('click', () => { plan = makePlan(); st.i = 0; st.phase = 'idle'; buildSeq(); });
+  const gearBtn = (id, key) => {
+    const b = $(id); b.setAttribute('aria-pressed', !!gear[key]);
+    b.addEventListener('click', () => {
+      gear[key] = !gear[key]; b.setAttribute('aria-pressed', gear[key]); store.set('qishen-gear', gear);
+      plan = makePlan(); st.i = 0; st.phase = 'idle'; buildSeq();
+    });
+  };
+  gearBtn('gearDb', 'db'); gearBtn('gearBar', 'bar');
+  $('voice').addEventListener('click', e => {
+    voiceOn = !voiceOn; e.currentTarget.setAttribute('aria-pressed', voiceOn);
+    e.currentTarget.textContent = '语音提示：' + (voiceOn ? '开' : '关');
+    if (!voiceOn) try { speechSynthesis.cancel(); } catch (err) {}
+  });
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && e.target.closest('button')) return;
+    if (e.code === 'Space') { e.preventDefault(); start(); }
+    if (e.code === 'ArrowRight') $('skip').click();
+  });
+
+  buildSeq();
+  setInterval(tick, 100);
+  requestAnimationFrame(frame);
+})();
+</script>
