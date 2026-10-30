@@ -208,7 +208,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
         </div>
         <ol class="seq" id="seq"></ol>
       </section>
-      <p class="foot">每轮按「热身 → 下肢 → 推 → 拉 → 心肺 → 下肢 → 核心 → 拉伸」随机抽取，尽量避开最近两轮做过的动作。快捷键：<kbd>空格</kbd> 开始 / 暂停，<kbd>→</kbd> 跳过。有伤病或疼痛请做简化版或跳过。</p>
+      <p class="foot">每轮按「热身 → 肩颈 → 下肢 → 推 → 拳击 → 肩颈 → 拉 → 拳击 → 肩颈 → 腿部冲刺」随机抽取，尽量避开最近两轮做过的动作。全部站着或坐椅子做，不用趴地上。快捷键：<kbd>空格</kbd> 开始 / 暂停，<kbd>→</kbd> 跳过。有伤病或疼痛请做简化版或跳过。</p>
     </div>
   </div>
 
@@ -235,7 +235,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
 (() => {
   const PREP = 10, WORK = 50;
   const GEAR = { body:'徒手', db:'哑铃', bar:'单杠' };
-  const CAT = { warm:'热身', lower:'下肢', push:'推', pull:'拉', cardio:'心肺', core:'核心', stretch:'拉伸', box:'拳击' };
+  const CAT = { warm:'热身', neck:'肩颈', lower:'下肢', push:'推', pull:'拉', box:'拳击', finish:'腿部冲刺' };
 
   // 姿势常量
   const SQ = {t:36,h:-20,ll1:88,ll2:108,rl1:88,rl2:108,dx:-12};
@@ -248,189 +248,188 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
   const HOOK = BOTH(GD,{t:0,la1:80,la2:90});
   const UPPER = BOTH(GD,{t:14,ra1:35,ra2:135,ll2:24,rl2:24});
   const DUCK = BOTH(GD,{t:16,ll1:40,ll2:62,rl1:-28,rl2:55});
+  const LUP = BOTH(GD,{t:2,la1:35,la2:135,ll2:22,rl2:22});
 
   // ---- 动作库 ----
   // 角度：0 = 竖直向下，正值转向画面右侧。side 视角人物面朝右，l 为近侧肢体，r 为远侧
+  // cat：warm 热身 / neck 肩颈放松 / lower 下肢 / push 推 / pull 拉 / box 拳击 / finish 最后的腿部冲刺
+  const ROWB = {t:60,h:15,dx:-12,ll1:28,ll2:35,rl1:-12,rl2:8,la1:0,la2:0,ra1:30,ra2:0};
   const LIB = [
     // 热身
-    { id:'march', name:'原地慢速提膝', tag:'唤醒下肢循环', cat:['warm','cardio'], gear:'body', view:'side', period:2.2,
+    { id:'march', name:'原地慢速提膝', tag:'唤醒下肢循环', cat:['warm'], gear:'body', view:'side', period:2.2,
       frames:[{}, {ll1:78,ll2:100,lf:80,la1:-30,la2:50,ra1:35,ra2:50}, {}, {rl1:78,rl2:100,rf:80,la1:35,la2:50,ra1:-30,ra2:50}],
       cues:['膝盖慢慢抬到接近髋部的高度','手臂与腿交替前后摆动','脚尖先着地再轻轻放下，不跺地'],
       why:'久坐时下肢血流变慢，先让心率和腿部循环起来。', easy:'抬低一点，变成原地踏步。' },
-    { id:'shrug', name:'肩部绕环', tag:'放松肩颈', cat:['warm'], gear:'body', view:'front', period:2.4, sided:'换方向', reverse:true,
-      frames:[{}, {shrug:8,la1:-14,ra1:14}, {shrug:4,la1:-6,la2:-14,ra1:6,ra2:14}, {shrug:-2,la1:-8,ra1:8}],
-      cues:['双肩先向上耸到耳朵','向后、向下画尽量大的圆','25 秒后换成向前绕'],
-      why:'盯屏幕时肩膀会不自觉耸起、前扣，绕环能放松肩颈。', easy:'只做耸肩、放下。' },
-    { id:'jack', name:'无跳开合', tag:'提心率 · 不吵', cat:['warm','cardio'], gear:'body', view:'front', period:1.8,
+    { id:'jack', name:'无跳开合', tag:'提心率 · 不吵', cat:['warm'], gear:'body', view:'front', period:1.8,
       frames:[{}, {ll1:-22,la1:-165,ra1:165,la2:0,ra2:0}, {}, {rl1:22,la1:-165,ra1:165,la2:0,ra2:0}],
       cues:['一只脚向侧面迈出，同时双手举过头顶','收回，再换另一只脚','加快节奏提高心率，但脚不离地'],
       why:'开合跳的安静版，楼下听不到，心率一样能提上来。', easy:'放慢速度，手只举到肩膀高度。' },
     { id:'armcircle', name:'手臂大绕环', tag:'打开肩关节', cat:['warm'], gear:'body', view:'front', period:2, sided:'换方向', reverse:true,
       frames:[{}, {la1:-90,ra1:90,la2:0,ra2:0}, {la1:-170,ra1:170,la2:0,ra2:0}, {la1:-90,ra1:90,la2:0,ra2:0}],
       cues:['双臂伸直，从体侧画最大的圆','肩膀下沉，不要耸肩','25 秒后反方向绕'],
-      why:'让肩关节在各个方向都活动一遍，为后面的推拉动作热身。', easy:'画小一点的圈。' },
-    { id:'box', name:'空拳出拳', tag:'上身 · 心率', cat:['warm','cardio'], gear:'body', view:'side', period:1,
-      frames:[{t:5,ll1:12,rl1:-12,la1:30,la2:120,ra1:30,ra2:120}, {t:8,ll1:12,rl1:-12,la1:88,la2:0,ra1:30,ra2:120},
-              {t:5,ll1:12,rl1:-12,la1:30,la2:120,ra1:30,ra2:120}, {t:10,ll1:12,rl1:-12,la1:30,la2:120,ra1:88,ra2:0}],
-      cues:['前后分腿站，双拳护在下巴前','左右手交替向前出拳，转动腰胯','出拳后马上收回护脸'],
-      why:'脚不离地也能让全身热起来，还能放松久坐僵硬的胸椎。', easy:'放慢速度，出拳不用全力。' },
+      why:'让肩关节在各个方向都活动一遍，为后面的推拉和出拳热身。', easy:'画小一点的圈。' },
+
+    // 肩颈放松
+    { id:'shrug', name:'肩部绕环', tag:'放松肩颈', cat:['neck'], gear:'body', view:'front', period:2.4, sided:'换方向', reverse:true,
+      frames:[{}, {shrug:8,la1:-14,ra1:14}, {shrug:4,la1:-6,la2:-14,ra1:6,ra2:14}, {shrug:-2,la1:-8,ra1:8}],
+      cues:['双肩先向上耸到耳朵','向后、向下画尽量大的圆','25 秒后换成向前绕'],
+      why:'盯屏幕时肩膀会不自觉耸起、前扣，绕环能放松肩颈。', easy:'只做耸肩、放下。' },
+    { id:'neck', name:'颈部拉伸 + 深呼吸', tag:'颈部 · 放松', cat:['neck'], gear:'body', view:'front', period:9,
+      frames:[{}, {h:30,shrug:-2}, {h:30,shrug:-2}, {}, {h:-30,shrug:-2}, {h:-30,shrug:-2}],
+      cues:['头慢慢倒向一侧肩膀，肩膀下沉','每侧停 4 秒左右，再换另一侧','鼻子吸气 4 秒，嘴巴呼气 6 秒'],
+      why:'放松颈部两侧，让心率慢下来。', easy:'坐着做也可以。' },
+    { id:'chest', name:'背后扣手扩胸', tag:'胸 · 肩前侧', cat:['neck'], gear:'body', view:'side', period:5,
+      frames:[{t:-4,h:-6,la1:-30,la2:0,ra1:-30,ra2:0}, {t:-8,h:-12,shrug:-2,la1:-48,la2:0,ra1:-48,ra2:0},
+              {t:-8,h:-12,shrug:-2,la1:-48,la2:0,ra1:-48,ra2:0}, {t:-4,h:-6,la1:-30,la2:0,ra1:-30,ra2:0}],
+      cues:['双手在背后十指交扣','手臂伸直向后、向上抬','挺胸，下巴微收，保持呼吸'],
+      why:'打开打字时一直内扣的胸口和肩膀，肩颈压力跟着变小。', easy:'双手抓一条毛巾，握距宽一点。' },
 
     // 下肢
     { id:'squat', name:'徒手深蹲', tag:'臀腿 · 核心', cat:['lower'], gear:'body', view:'side', period:3.4,
       frames:[{}, BOTH(SQ,{la1:88,la2:0,ra1:88,ra2:0}), BOTH(SQ,{la1:88,la2:0,ra1:88,ra2:0}), {}],
       cues:['双脚与肩同宽，脚尖略向外','臀部向后坐，像要坐回椅子','膝盖朝脚尖方向，脚跟不离地'],
       why:'坐着时臀肌几乎不工作，深蹲把它重新叫醒。', easy:'蹲到碰到椅子就起来。' },
-    { id:'goblet', name:'高脚杯深蹲', tag:'臀腿 · 上背稳定', cat:['lower'], gear:'db', view:'side', period:3.4,
-      frames:[{la1:15,la2:140,ra1:15,ra2:140}, BOTH(SQ,{t:30,h:-15,la1:40,la2:120,ra1:40,ra2:120}),
-              BOTH(SQ,{t:30,h:-15,la1:40,la2:120,ra1:40,ra2:120}), {la1:15,la2:140,ra1:15,ra2:140}],
-      cues:['双手托住一个哑铃的一端，贴在胸前','蹲下时手肘落在膝盖内侧','起身时用脚跟发力，挺胸'],
-      why:'胸前负重让上身自然挺直，比徒手深蹲更能练到臀腿。', easy:'换成更轻的重量，或回到徒手深蹲。' },
-    { id:'rdl', name:'哑铃罗马尼亚硬拉', tag:'大腿后侧 · 臀', cat:['lower'], gear:'db', view:'side', period:4,
-      frames:[{la1:0,la2:0,ra1:0,ra2:0}, {t:80,h:20,dx:-18,ll1:12,ll2:20,rl1:12,rl2:20,la1:0,la2:0,ra1:0,ra2:0},
-              {t:80,h:20,dx:-18,ll1:12,ll2:20,rl1:12,rl2:20,la1:0,la2:0,ra1:0,ra2:0}, {la1:0,la2:0,ra1:0,ra2:0}],
-      cues:['膝盖微屈，臀部向后推','哑铃贴着大腿往下滑到小腿','背始终挺直，大腿后侧有拉伸感就起'],
-      why:'练臀和大腿后侧，同时教会身体用髋发力、不用腰硬拉。', easy:'减轻重量，只下到膝盖高度。' },
     { id:'lunge', name:'交替后撤弓步', tag:'臀腿 · 平衡', cat:['lower'], gear:'body', view:'side', period:3, sided:'换边', mirror:true,
       frames:[{}, {ll1:70,ll2:75,rl1:-25,rl2:60,rf:50,la1:20,la2:30,ra1:-20,ra2:30},
               {ll1:70,ll2:75,rl1:-25,rl2:60,rf:50,la1:20,la2:30,ra1:-20,ra2:30}, {}],
       cues:['一条腿向后撤一大步','后腿膝盖下沉到接近地面','前脚跟发力站回来，25 秒后换腿'],
       why:'单腿发力，同时纠正两侧力量不平衡。', easy:'扶着桌子，下得浅一点。' },
-    { id:'dblunge', name:'哑铃后撤弓步', tag:'臀腿 · 负重', cat:['lower'], gear:'db', view:'side', period:3.2, sided:'换边', mirror:true,
-      frames:[{la1:0,la2:0,ra1:0,ra2:0}, {ll1:70,ll2:75,rl1:-25,rl2:60,rf:50,la1:0,la2:0,ra1:0,ra2:0},
-              {ll1:70,ll2:75,rl1:-25,rl2:60,rf:50,la1:0,la2:0,ra1:0,ra2:0}, {la1:0,la2:0,ra1:0,ra2:0}],
-      cues:['双手各拿一个哑铃垂在体侧','后撤步下蹲，上身保持直立','25 秒后换另一条腿'],
-      why:'比徒手弓步强度更高，适合已经觉得太轻松的时候。', easy:'放下哑铃做徒手版。' },
+    { id:'rdl', name:'哑铃罗马尼亚硬拉', tag:'大腿后侧 · 臀', cat:['lower'], gear:'db', view:'side', period:4,
+      frames:[{la1:0,la2:0,ra1:0,ra2:0}, {t:80,h:20,dx:-18,ll1:12,ll2:20,rl1:12,rl2:20,la1:0,la2:0,ra1:0,ra2:0},
+              {t:80,h:20,dx:-18,ll1:12,ll2:20,rl1:12,rl2:20,la1:0,la2:0,ra1:0,ra2:0}, {la1:0,la2:0,ra1:0,ra2:0}],
+      cues:['膝盖微屈，臀部向后推','哑铃贴着大腿往下滑到小腿','背始终挺直，大腿后侧有拉伸感就起'],
+      why:'练臀和大腿后侧，同时教会身体用髋发力、不用腰硬拉。', easy:'减轻重量，只下到膝盖高度。' },
     { id:'calf', name:'提踵', tag:'小腿 · 下肢回流', cat:['lower'], gear:'body', view:'side', period:2.6,
       frames:[{la1:-25,la2:95,ra1:-25,ra2:95}, {lf:32,rf:32,la1:-25,la2:95,ra1:-25,ra2:95},
               {lf:32,rf:32,la1:-25,la2:95,ra1:-25,ra2:95}, {la1:-25,la2:95,ra1:-25,ra2:95}],
       cues:['脚跟慢慢抬到最高','最高点停 1 秒，再慢慢放下','可以轻扶桌面保持平衡'],
       why:'小腿肌肉是“第二心脏”，收缩时把下肢血液泵回心脏。', easy:'双手扶桌，幅度小一点。' },
-    { id:'sumo', name:'哑铃相扑深蹲', tag:'大腿内侧 · 臀', cat:['lower'], gear:'db', view:'front', period:3.4,
-      frames:[{ll1:-14,rl1:14,la1:12,la2:0,ra1:-12,ra2:0}, {ll1:-60,ll2:-50,rl1:60,rl2:50,la1:12,la2:0,ra1:-12,ra2:0},
-              {ll1:-60,ll2:-50,rl1:60,rl2:50,la1:12,la2:0,ra1:-12,ra2:0}, {ll1:-14,rl1:14,la1:12,la2:0,ra1:-12,ra2:0}],
-      cues:['双脚比肩宽，脚尖朝外 45°','双手握一个哑铃垂在两腿之间','膝盖朝脚尖方向打开，垂直下蹲'],
-      why:'宽站距更多练到大腿内侧和臀部，也能打开紧绷的髋。', easy:'不拿哑铃，蹲浅一点。' },
+    { id:'sidelunge', name:'哑铃侧弓步', tag:'大腿内外侧', cat:['lower'], gear:'db', view:'front', period:4.4,
+      frames:[{ll1:-12,rl1:12,la1:-4,la2:0,ra1:4,ra2:0},
+              {ll1:-55,ll2:-50,rl1:35,rl2:0,dx:-10,t:8,la1:6,la2:0,ra1:10,ra2:0}, {ll1:-55,ll2:-50,rl1:35,rl2:0,dx:-10,t:8,la1:6,la2:0,ra1:10,ra2:0},
+              {ll1:-12,rl1:12,la1:-4,la2:0,ra1:4,ra2:0},
+              {rl1:55,rl2:50,ll1:-35,ll2:0,dx:10,t:-8,la1:-10,la2:0,ra1:-6,ra2:0}, {rl1:55,rl2:50,ll1:-35,ll2:0,dx:10,t:-8,la1:-10,la2:0,ra1:-6,ra2:0}],
+      cues:['双手各拿一个哑铃，双脚并拢站好','向一侧迈一大步，屈膝下蹲，另一条腿伸直','蹬回来，换另一侧'],
+      why:'练大腿内外侧，左右方向的力量平时很少练到。', easy:'不拿哑铃，步子小一点。' },
 
-    // 推
+    // 推（哑铃）
     { id:'press', name:'哑铃推举', tag:'肩 · 手臂后侧', cat:['push'], gear:'db', view:'front', period:2.6,
       frames:[{la1:-75,la2:-105,ra1:75,ra2:105}, {la1:-165,la2:0,ra1:165,ra2:0}, {la1:-165,la2:0,ra1:165,ra2:0}, {la1:-75,la2:-105,ra1:75,ra2:105}],
       cues:['哑铃放在肩膀两侧，掌心朝前','向上推到手臂伸直，不要锁死手肘','收紧腹部，别向后仰'],
       why:'练肩和手臂，也是对抗耸肩、含胸的好动作。', easy:'换轻一点，或一次只推一侧。' },
+    { id:'arnold', name:'哑铃阿诺德推举', tag:'肩 · 三个方向', cat:['push'], gear:'db', view:'front', period:4,
+      frames:[{la1:-20,la2:-155,ra1:20,ra2:155}, {la1:-75,la2:-105,ra1:75,ra2:105}, {la1:-165,la2:0,ra1:165,ra2:0},
+              {la1:-165,la2:0,ra1:165,ra2:0}, {la1:-75,la2:-105,ra1:75,ra2:105}, {la1:-20,la2:-155,ra1:20,ra2:155}],
+      cues:['哑铃举在面前，掌心朝自己','向上推的同时手肘打开、掌心转向前','推到头顶，再原路转回来'],
+      why:'推举加上旋转，肩膀前、中、后都练到。', easy:'换轻一点，速度放慢。' },
     { id:'lateral', name:'哑铃侧平举', tag:'肩中束', cat:['push'], gear:'db', view:'front', period:2.6,
       frames:[{la1:-12,la2:0,ra1:12,ra2:0}, {la1:-88,la2:0,ra1:88,ra2:0}, {la1:-12,la2:0,ra1:12,ra2:0}],
-      cues:['手臂微屈，从体侧抬到肩膀高度','抬起时想象手肘带着哑铃走','慢慢放下，不要甩'],
+      cues:['手臂微屈，从体侧抬到肩膀高度','抬起时想象手肘带着哑铃走','慢慢放下，不要耸肩'],
       why:'肩部线条更宽，同时锻炼肩关节稳定性。', easy:'只抬到 45°，或空手做。' },
-    { id:'front', name:'哑铃前平举', tag:'肩前束', cat:['push'], gear:'db', view:'side', period:2.6,
-      frames:[{la1:5,la2:0,ra1:5,ra2:0}, {la1:90,la2:0,ra1:90,ra2:0}, {la1:5,la2:0,ra1:5,ra2:0}],
-      cues:['手臂伸直，向前抬到肩膀高度','身体不要前后晃','慢慢放回大腿前侧'],
-      why:'练肩前侧，也能检验你站得稳不稳。', easy:'两只手轮流抬。' },
     { id:'triceps', name:'哑铃颈后臂屈伸', tag:'手臂后侧', cat:['push'], gear:'db', view:'side', period:2.8,
       frames:[{la1:178,la2:0,ra1:178,ra2:0}, {la1:165,la2:165,ra1:165,ra2:165}, {la1:165,la2:165,ra1:165,ra2:165}, {la1:178,la2:0,ra1:178,ra2:0}],
       cues:['双手托一个哑铃举过头顶','大臂不动，小臂向脑后放下','用手臂后侧发力推回顶端'],
-      why:'针对手臂后侧，同时拉伸久坐后变紧的背阔肌。', easy:'坐着做，或换更轻的哑铃。' },
+      why:'针对手臂后侧，同时拉伸久坐后变紧的背阔肌。', easy:'换更轻的哑铃。' },
+    { id:'curlpress', name:'哑铃弯举推举', tag:'手臂 · 肩', cat:['push'], gear:'db', view:'side', period:3.6,
+      frames:[{la1:0,la2:0,ra1:0,ra2:0}, {la1:5,la2:145,ra1:5,ra2:145}, {la1:178,la2:0,ra1:178,ra2:0},
+              {la1:178,la2:0,ra1:178,ra2:0}, {la1:5,la2:145,ra1:5,ra2:145}, {la1:0,la2:0,ra1:0,ra2:0}],
+      cues:['先弯举，把哑铃举到肩膀','接着向上推过头顶','按原路放回，一个连贯动作'],
+      why:'一个动作同时练到手臂和肩。', easy:'拆开做：先只弯举，再只推举。' },
 
     // 拉
-    { id:'ytw', name:'Y-T-W 扩胸', tag:'上背 · 改善含胸', cat:['pull'], gear:'body', view:'front', period:8,
-      frames:[{}, {la1:-150,la2:0,ra1:150,ra2:0}, {la1:-150,la2:0,ra1:150,ra2:0}, {la1:-90,la2:0,ra1:90,ra2:0},
-              {la1:-90,la2:0,ra1:90,ra2:0}, {la1:-50,la2:-105,ra1:50,ra2:105}, {la1:-50,la2:-105,ra1:50,ra2:105}],
-      cues:['手臂依次举成 Y、T、W 字形','每个姿势夹紧肩胛骨停 1 秒','收紧腹部，不要塌腰'],
-      why:'对抗驼背，激活久坐后变弱的中下斜方肌和菱形肌。', easy:'只做 T 和 W，手臂放低一点。' },
     { id:'row', name:'哑铃俯身划船', tag:'背 · 手臂', cat:['pull'], gear:'db', view:'side', period:2.6,
       frames:[{t:65,h:15,dx:-14,ll1:20,ll2:35,rl1:20,rl2:35,la1:0,la2:0,ra1:0,ra2:0},
               {t:65,h:15,dx:-14,ll1:20,ll2:35,rl1:20,rl2:35,la1:-95,la2:95,ra1:-95,ra2:95},
               {t:65,h:15,dx:-14,ll1:20,ll2:35,rl1:20,rl2:35,la1:0,la2:0,ra1:0,ra2:0}],
       cues:['膝盖微屈，上身前倾约 45°','手肘向后上方拉，哑铃贴近腰','顶端夹紧肩胛骨，再慢慢放下'],
-      why:'练整个背部，是坐姿驼背的直接“解药”。', easy:'一只手撑桌子，单手轮流拉。' },
+      why:'练整个背部，是坐姿驼背的直接“解药”。', easy:'换成单臂划船，一只手撑膝盖。' },
+    { id:'onearmrow', name:'哑铃单臂划船', tag:'背 · 左右平衡', cat:['pull'], gear:'db', view:'side', period:2.6, oneBell:true, sided:'换手',
+      frames:[ROWB, BOTH(ROWB,{la1:-95,la2:95}), ROWB],
+      cues:['前后分腿站，一只手撑在前腿膝盖上','另一只手拿哑铃，手肘贴着身体向后拉','顶端夹紧肩胛骨，25 秒后换手'],
+      why:'单侧练背，能发现并纠正左右力量差。', easy:'换轻一点的哑铃。' },
     { id:'curl', name:'哑铃弯举', tag:'手臂前侧', cat:['pull'], gear:'db', view:'side', period:2.4,
       frames:[{la1:0,la2:0,ra1:0,ra2:0}, {la1:5,la2:145,ra1:5,ra2:145}, {la1:0,la2:0,ra1:0,ra2:0}],
       cues:['大臂贴住身体两侧不动','弯起到哑铃接近肩膀','放下时慢 2 秒'],
       why:'练手臂前侧和握力，也为引体向上打基础。', easy:'两只手轮流做。' },
+    { id:'ytw', name:'Y-T-W 扩胸', tag:'上背 · 改善含胸', cat:['pull'], gear:'body', view:'front', period:8,
+      frames:[{}, {la1:-150,la2:0,ra1:150,ra2:0}, {la1:-150,la2:0,ra1:150,ra2:0}, {la1:-90,la2:0,ra1:90,ra2:0},
+              {la1:-90,la2:0,ra1:90,ra2:0}, {la1:-50,la2:-105,ra1:50,ra2:105}, {la1:-50,la2:-105,ra1:50,ra2:105}],
+      cues:['手臂依次举成 Y、T、W 字形','每个姿势夹紧肩胛骨停 1 秒','收紧腹部，不要塌腰'],
+      why:'对抗驼背，激活久坐后变弱的中下斜方肌和菱形肌。', easy:'只做 T 和 W，手臂放低一点。' },
     { id:'pullup', name:'引体向上', tag:'背 · 手臂', cat:['pull'], gear:'bar', view:'side', period:3.2, hang:true,
       frames:[HANG, BOTH(HANG,{la1:25,la2:150,ra1:25,ra2:150,t:-5}), BOTH(HANG,{la1:25,la2:150,ra1:25,ra2:150,t:-5}), HANG],
       cues:['双手略比肩宽握杠，屈膝悬垂','先下沉肩膀，再拉到下巴过杠','慢慢放到手臂伸直；下杠时脚尖先着地，别跳下来'],
       why:'背部和手臂的王牌动作，把坐姿压扁的上背重新撑起来。', easy:'跳上去后用 3 到 5 秒慢慢下放。' },
-    { id:'scap', name:'肩胛引体', tag:'下斜方肌 · 肩稳定', cat:['pull'], gear:'bar', view:'side', period:2.4, hang:true,
-      frames:[BOTH(HANG,{shrug:6}), BOTH(HANG,{shrug:-5}), BOTH(HANG,{shrug:-5}), BOTH(HANG,{shrug:6})],
-      cues:['手臂伸直悬挂，肩膀放松耸起','只靠肩胛骨下沉把身体抬高几厘米','手肘全程不弯曲'],
-      why:'训练肩胛下沉，这是正确引体和好体态的基础。', easy:'脚尖点地减轻体重。' },
 
-    // 核心
-    { id:'kneeraise', name:'悬垂屈膝举腿', tag:'腹部 · 握力', cat:['core'], gear:'bar', view:'side', period:3, hang:true,
-      frames:[HANG, BOTH(HANG,{ll1:95,ll2:100,rl1:95,rl2:100,lf:90,rf:90,t:-8}), BOTH(HANG,{ll1:95,ll2:100,rl1:95,rl2:100,lf:90,rf:90,t:-8}), HANG],
-      cues:['双手握杠悬挂，身体不要晃','收腹把膝盖抬到腰的高度','慢慢放下，控制住摆动'],
-      why:'练腹部的同时给腰椎减压，久坐族很适合。', easy:'只做悬挂，或一次抬一条腿。' },
-    { id:'sidebenddb', name:'哑铃侧屈', tag:'侧腹', cat:['core'], gear:'db', view:'front', period:4,
-      frames:[{la1:-4,la2:0,ra1:4,ra2:0}, {t:-18,dx:4,la1:-4,la2:0,ra1:8,ra2:0}, {la1:-4,la2:0,ra1:4,ra2:0}, {t:18,dx:-4,la1:-8,la2:0,ra1:4,ra2:0}],
-      cues:['双手各拿一个哑铃垂在体侧','上身向左、向右交替侧弯','只弯腰侧，臀部不动'],
-      why:'练侧腹，帮助稳定脊柱。', easy:'只拿一个哑铃或空手做。' },
-    { id:'crunch', name:'站姿提膝卷腹', tag:'腹部', cat:['core'], gear:'body', view:'side', period:2,
-      frames:[{la1:-130,la2:-123,ra1:-130,ra2:-123}, {t:22,ll1:90,ll2:95,la1:-108,la2:-123,ra1:-108,ra2:-123},
-              {la1:-130,la2:-123,ra1:-130,ra2:-123}, {t:22,rl1:90,rl2:95,la1:-108,la2:-123,ra1:-108,ra2:-123}],
-      cues:['双手放在耳朵两侧','卷起上身，同时抬起一侧膝盖','左右交替，呼气时收紧腹部'],
-      why:'不用趴在地上也能练腹，办公室也能做。', easy:'放慢速度，膝盖抬低一点。' },
-
-    // 心肺
-    { id:'thruster', name:'哑铃深蹲推举', tag:'全身', cat:['cardio'], gear:'db', view:'side', period:2.6,
-      frames:[{la1:20,la2:150,ra1:20,ra2:150}, BOTH(SQ,{t:30,h:-15,la1:30,la2:140,ra1:30,ra2:140}),
-              {la1:20,la2:150,ra1:20,ra2:150}, {la1:175,la2:0,ra1:178,ra2:0}],
-      cues:['哑铃放在肩膀上，先蹲下','站起时借腿的力量把哑铃推过头','连贯做，保持呼吸节奏'],
-      why:'一个动作动到全身，心率上得快。', easy:'换轻哑铃，或拆成先蹲、再推。' },
-
-    // 拉伸
-    { id:'lungestretch', name:'弓步拉伸', tag:'髋屈肌 · 下背', cat:['stretch'], gear:'body', view:'side', period:4, sided:'换边', mirror:true,
-      frames:[{t:-6,ll1:62,ll2:70,rl1:-15,rl2:55,rf:50,la1:172,la2:0,ra1:176,ra2:0},
-              {t:-10,ll1:66,ll2:76,rl1:-20,rl2:55,rf:50,la1:172,la2:0,ra1:176,ra2:0}],
-      cues:['前腿屈膝，后腿向后伸展','收紧后侧臀部，骨盆轻轻向前推','双手上举，感受髋部前侧被拉开'],
-      why:'久坐让髋屈肌一直处于缩短状态，这是腰酸的常见原因。', easy:'扶着椅背，步子迈小一点。' },
-    { id:'fold', name:'站姿体前屈', tag:'大腿后侧 · 背部', cat:['stretch'], gear:'body', view:'side', period:7,
-      frames:[{}, {t:100,h:25,dx:-14,ll1:10,ll2:18,rl1:10,rl2:18,la1:2,la2:0,ra1:-2,ra2:0},
-              {t:100,h:25,dx:-14,ll1:10,ll2:18,rl1:10,rl2:18,la1:2,la2:0,ra1:-2,ra2:0}, {}],
-      cues:['膝盖微屈，从髋部向前折叠','头和手臂自然垂下，放松脖子','起身时慢慢卷起，一节一节站直'],
-      why:'拉伸大腿后侧，缓解长时间坐姿带来的背部紧张。', easy:'双手扶膝盖或桌沿，弯到有感觉就停。' },
-    { id:'sidebend', name:'站姿侧弯', tag:'侧腰 · 背阔肌', cat:['stretch'], gear:'body', view:'front', period:7,
-      frames:[{}, {t:20,dx:-5,la1:150,la2:-30,ra1:18,ra2:0}, {t:20,dx:-5,la1:150,la2:-30,ra1:18,ra2:0},
-              {}, {t:-20,dx:5,ra1:-150,ra2:30,la1:-18,la2:0}, {t:-20,dx:5,ra1:-150,ra2:30,la1:-18,la2:0}],
-      cues:['一只手举过头顶，向另一侧弯','臀部保持不动，只弯上半身','侧腰有拉伸感时停 2 到 3 秒'],
-      why:'打开肋骨侧面，呼吸会更深。', easy:'手放在脑后，幅度小一点。' },
-    { id:'neck', name:'颈部拉伸 + 深呼吸', tag:'颈部 · 收尾放松', cat:['stretch'], gear:'body', view:'front', period:9,
-      frames:[{}, {h:30,shrug:-2}, {h:30,shrug:-2}, {}, {h:-30,shrug:-2}, {h:-30,shrug:-2}],
-      cues:['头慢慢倒向一侧肩膀，肩膀下沉','每侧停 4 秒左右，再换另一侧','鼻子吸气 4 秒，嘴巴呼气 6 秒'],
-      why:'让心率降下来，带着清醒的状态回到工作。', easy:'坐着做也可以。' },
-    { id:'quad', name:'站姿股四头肌拉伸', tag:'大腿前侧', cat:['stretch'], gear:'body', view:'side', period:5, sided:'换边', mirror:true,
-      frames:[{t:-10,ll1:-20,ll2:150,lf:-150,la1:-16,la2:0,ra1:60,ra2:10}, {t:-8,ll1:-24,ll2:150,lf:-150,la1:-18,la2:0,ra1:65,ra2:10}],
-      cues:['单手抓住同侧脚背，拉向臀部','两侧膝盖靠拢，骨盆轻轻前推','另一只手扶墙或桌子，25 秒后换腿'],
-      why:'大腿前侧在坐姿下长时间缩短，拉开能减轻膝盖和腰的压力。', easy:'抓不到脚就用毛巾套住脚背。' },
-    { id:'chest', name:'背后扣手扩胸', tag:'胸 · 肩前侧', cat:['stretch'], gear:'body', view:'side', period:5,
-      frames:[{t:-4,h:-6,la1:-30,la2:0,ra1:-30,ra2:0}, {t:-8,h:-12,shrug:-2,la1:-48,la2:0,ra1:-48,ra2:0},
-              {t:-8,h:-12,shrug:-2,la1:-48,la2:0,ra1:-48,ra2:0}, {t:-4,h:-6,la1:-30,la2:0,ra1:-30,ra2:0}],
-      cues:['双手在背后十指交扣','手臂伸直向后、向上抬','挺胸，下巴微收，保持呼吸'],
-      why:'打开打字时一直内扣的胸口和肩膀。', easy:'双手抓一条毛巾，握距宽一点。' },
-    { id:'deadhang', name:'单杠悬垂放松', tag:'脊柱减压 · 握力', cat:['stretch'], gear:'bar', view:'side', period:6, hang:true,
-      frames:[BOTH(HANG,{shrug:6}), BOTH(HANG,{shrug:4,t:-3}), BOTH(HANG,{shrug:6,t:3})],
-      cues:['双手握杠，全身放松挂着','屈膝让脚离地，肩膀自然耸起','累了就下来休息几秒再挂'],
-      why:'让坐了一小时被压紧的脊柱拉长，同时练握力。', easy:'脚尖点地，只挂一部分体重。' },
-
-    // 拳击连招（数字是拳法编号：1 前手刺拳，2 后手直拳，3 前手勾拳，6 后手上勾拳）
-    { id:'combo12', name:'拳击连招 1-2', tag:'刺拳 + 后手直拳', cat:['cardio','box'], gear:'body', view:'side', period:2.1,
+    // 拳击（数字是拳法编号：1 前手刺拳，2 后手直拳，3 前手勾拳，5 前手上勾拳，6 后手上勾拳）
+    { id:'box', name:'空拳出拳', tag:'直拳节奏', cat:['box'], gear:'body', view:'side', period:1,
+      frames:[{t:5,ll1:12,rl1:-12,la1:30,la2:120,ra1:30,ra2:120}, {t:8,ll1:12,rl1:-12,la1:88,la2:0,ra1:30,ra2:120},
+              {t:5,ll1:12,rl1:-12,la1:30,la2:120,ra1:30,ra2:120}, {t:10,ll1:12,rl1:-12,la1:30,la2:120,ra1:88,ra2:0}],
+      cues:['前后分腿站，双拳护在下巴前','左右手交替向前出拳，转动腰胯','出拳后马上收回护脸'],
+      why:'脚不离地也能让全身热起来，还能放松久坐僵硬的胸椎。', easy:'放慢速度，出拳不用全力。' },
+    { id:'combo12', name:'拳击连招 1-2', tag:'刺拳 + 后手直拳', cat:['box'], gear:'body', view:'side', period:2.1,
       frames:[GD, JAB, GD, CROSS, GD, GD],
       cues:['左脚在前站成格斗姿势，双拳护在下巴前','1 前手刺拳：快出快收','2 后手直拳：后脚跟转、腰胯转，力从脚下来','双脚贴地移动，不跳'],
       why:'最基础也最常用的连招，先把它打顺。', easy:'放慢速度，只求动作准确。' },
-    { id:'combo112', name:'拳击连招 1-1-2', tag:'双刺拳 + 直拳', cat:['cardio','box'], gear:'body', view:'side', period:2.8,
+    { id:'combo112', name:'拳击连招 1-1-2', tag:'双刺拳 + 直拳', cat:['box'], gear:'body', view:'side', period:2.8,
       frames:[GD, JAB, GD, JAB, GD, CROSS, GD, GD],
       cues:['第一下刺拳试探距离，第二下更快','紧接一记后手直拳','每组打完马上回到护脸姿势'],
       why:'连续刺拳能练出节奏和速度。', easy:'两组之间多停一拍。' },
-    { id:'combo123', name:'拳击连招 1-2-3', tag:'直拳接前手勾拳', cat:['cardio','box'], gear:'body', view:'side', period:2.8,
+    { id:'combo123', name:'拳击连招 1-2-3', tag:'直拳接前手勾拳', cat:['box'], gear:'body', view:'side', period:2.8,
       frames:[GD, JAB, GD, CROSS, GD, HOOK, GD, GD],
       cues:['先打 1-2','3 前手勾拳：手肘抬平，拳头横着打出去','勾拳靠转腰发力，不是甩手臂'],
       why:'直拳接勾拳，练上身转动，也放松久坐僵硬的胸椎。', easy:'只做 1-2，熟了再加 3。' },
-    { id:'comboduck', name:'拳击连招 1-2-下潜-2', tag:'进攻 + 防守', cat:['cardio','box'], gear:'body', view:'side', period:3.5,
+    { id:'combo1232', name:'拳击连招 1-2-3-2', tag:'经典四拳', cat:['box'], gear:'body', view:'side', period:3.5,
+      frames:[GD, JAB, GD, CROSS, GD, HOOK, GD, CROSS, GD, GD],
+      cues:['1-2 打出去','接 3 前手勾拳，转腰','最后再补一记 2 后手直拳'],
+      why:'最经典的四拳组合，左右交替发力。', easy:'每一拳之间停一拍。' },
+    { id:'combo232', name:'拳击连招 2-3-2', tag:'后手开场', cat:['box'], gear:'body', view:'side', period:2.8,
+      frames:[GD, CROSS, GD, HOOK, GD, CROSS, GD, GD],
+      cues:['直接用后手直拳开场','转回来打前手勾拳','再用后手直拳收尾'],
+      why:'后手开场更有力，练腰胯来回转动。', easy:'放慢速度。' },
+    { id:'combo1252', name:'拳击连招 1-2-5-2', tag:'加上勾拳', cat:['box'], gear:'body', view:'side', period:3.5,
+      frames:[GD, JAB, GD, CROSS, GD, LUP, GD, CROSS, GD, GD],
+      cues:['1-2 打出去','5 前手上勾拳：稍屈膝，从下往上打','最后补一记 2 后手直拳'],
+      why:'直拳、上勾拳混着打，上下两个方向都练到。', easy:'只做 1-2-5。' },
+    { id:'comboduck', name:'拳击连招 1-2-下潜-2', tag:'进攻 + 防守', cat:['box'], gear:'body', view:'side', period:3.5,
       frames:[GD, JAB, GD, CROSS, GD, DUCK, GD, CROSS, GD, GD],
       cues:['打完 1-2 屈膝下潜，像躲开对方的勾拳','用腿蹲下去，背不要弯','站起来马上补一记后手直拳','双脚贴地，不跳'],
       why:'加入防守动作，腿也一起练到。', easy:'下潜浅一点。' },
-    { id:'combo632', name:'拳击连招 6-3-2', tag:'上勾 + 勾拳 + 直拳', cat:['cardio','box'], gear:'body', view:'side', period:2.8,
+    { id:'combo632', name:'拳击连招 6-3-2', tag:'上勾 + 勾拳 + 直拳', cat:['box'], gear:'body', view:'side', period:2.8,
       frames:[GD, UPPER, GD, HOOK, GD, CROSS, GD, GD],
       cues:['6 后手上勾拳：稍微屈膝，从下往上打','接 3 前手勾拳','最后用 2 后手直拳收尾'],
       why:'近身组合，三个方向的出拳都练到。', easy:'每一拳之间停一下，先打准再加速。' },
+
+    // 最后的腿部冲刺（每轮第 10 个动作）
+    { id:'speedsquat', name:'速度深蹲', tag:'腿 · 冲刺', cat:['finish'], gear:'body', view:'side', period:1.5,
+      frames:[{}, BOTH(SQ,{la1:88,la2:0,ra1:88,ra2:0}), {}],
+      cues:['和普通深蹲一样，但尽量加快节奏','站起时用力伸髋，蹲下时控制住','最后 10 秒全力冲刺，脚不离地'],
+      why:'短时间把腿和心率推到最高。', easy:'降低速度，蹲浅一点。' },
+    { id:'pulse', name:'深蹲脉冲', tag:'大腿 · 燃脂', cat:['finish'], gear:'body', view:'side', period:0.9,
+      frames:[BOTH(SQ,{la1:88,la2:0,ra1:88,ra2:0}), BOTH(SQ,{t:30,ll1:70,ll2:88,rl1:70,rl2:88,la1:88,la2:0,ra1:88,ra2:0})],
+      cues:['蹲到大腿接近水平','在底部小幅度上下颤动，不站直','大腿发烫也坚持住，呼吸别停'],
+      why:'肌肉一直处于紧张状态，是最“烧腿”的安静动作之一。', easy:'蹲得高一点。' },
+    { id:'goblet', name:'高脚杯深蹲', tag:'臀腿 · 负重', cat:['finish'], gear:'db', view:'side', period:3,
+      frames:[{la1:15,la2:140,ra1:15,ra2:140}, BOTH(SQ,{t:30,h:-15,la1:40,la2:120,ra1:40,ra2:120}),
+              BOTH(SQ,{t:30,h:-15,la1:40,la2:120,ra1:40,ra2:120}), {la1:15,la2:140,ra1:15,ra2:140}],
+      cues:['双手托住一个哑铃的一端，贴在胸前','蹲下时手肘落在膝盖内侧','起身用脚跟发力，做到力竭为止'],
+      why:'胸前负重让上身自然挺直，比徒手深蹲更能练到臀腿。', easy:'换更轻的重量，或回到徒手深蹲。' },
+    { id:'dblunge', name:'哑铃后撤弓步', tag:'臀腿 · 负重', cat:['finish'], gear:'db', view:'side', period:3, sided:'换边', mirror:true,
+      frames:[{la1:0,la2:0,ra1:0,ra2:0}, {ll1:70,ll2:75,rl1:-25,rl2:60,rf:50,la1:0,la2:0,ra1:0,ra2:0},
+              {ll1:70,ll2:75,rl1:-25,rl2:60,rf:50,la1:0,la2:0,ra1:0,ra2:0}, {la1:0,la2:0,ra1:0,ra2:0}],
+      cues:['双手各拿一个哑铃垂在体侧','后撤步下蹲，上身保持直立','25 秒后换另一条腿，节奏越来越快'],
+      why:'单腿负重，强度高，最后用它把腿练透。', easy:'放下哑铃做徒手版。' },
+    { id:'thruster', name:'哑铃深蹲推举', tag:'全身 · 冲刺', cat:['finish'], gear:'db', view:'side', period:2.6,
+      frames:[{la1:20,la2:150,ra1:20,ra2:150}, BOTH(SQ,{t:30,h:-15,la1:30,la2:140,ra1:30,ra2:140}),
+              {la1:20,la2:150,ra1:20,ra2:150}, {la1:175,la2:0,ra1:178,ra2:0}],
+      cues:['哑铃放在肩膀上，先蹲下','站起时借腿的力量把哑铃推过头','连贯做，保持呼吸节奏'],
+      why:'一个动作动到全身，心率上得最快。', easy:'换轻哑铃，或拆成先蹲、再推。' },
+    { id:'highpull', name:'哑铃相扑高拉', tag:'全身 · 爆发', cat:['finish'], gear:'db', view:'front', period:2.2,
+      frames:[{ll1:-50,ll2:-42,rl1:50,rl2:42,la1:8,la2:0,ra1:-8,ra2:0},
+              {ll1:-14,rl1:14,la1:-110,la2:170,ra1:110,ra2:-170,shrug:3},
+              {ll1:-50,ll2:-42,rl1:50,rl2:42,la1:8,la2:0,ra1:-8,ra2:0}],
+      cues:['宽站距下蹲，双手握一个哑铃垂在中间','用腿发力站起，顺势把哑铃拉到胸前，手肘高过手','控制着放回，连续做'],
+      why:'腿发力带动全身，心率飙得快。', easy:'换轻一点的哑铃，或只做相扑深蹲。' },
   ];
   // 3D 动画动作（desk3d.js）
   (window.DESK3D_LIB || []).forEach(e => LIB.push(Object.assign({ view:'3d', period:1, frames:[], gear:'body', d3:e.id }, e)));
@@ -530,7 +529,8 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     fig.head.setAttribute('cx', h[0].toFixed(1)); fig.head.setAttribute('cy', h[1].toFixed(1));
     fig.legB.classList.toggle('far', !front); fig.armB.classList.toggle('far', !front);
     const db = ex.gear === 'db';
-    fig.bellA.style.display = fig.bellB.style.display = db ? '' : 'none';
+    fig.bellA.style.display = db ? '' : 'none';
+    fig.bellB.style.display = db && !ex.oneBell ? '' : 'none';
     if (db) { placeBell(fig.bellA, LA, T); placeBell(fig.bellB, RA, T); }
     fig.bar.style.display = ex.hang ? '' : 'none';
     // 悬垂动作整体缩小，保证单杠和脚都在画面里
@@ -550,8 +550,9 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
   let history = store.get('qishen-history', []);
 
   // ---- 随机编排 ----
-  const SLOTS = ['warm','warm','lower','push','pull','cardio','lower','core','stretch','stretch'];
-  const FALLBACK = ['lower','pull','core','cardio','push'];
+  // 肩颈放松占 3 个位置，最后一个固定是腿部冲刺
+  const SLOTS = ['warm','neck','lower','push','box','neck','pull','box','neck','finish'];
+  const FALLBACK = ['lower','pull','box','finish'];
   const pickOne = arr => arr[Math.floor(Math.random() * arr.length)];
   function makePlan() {
     const avail = LIB.filter(e => e.gear === 'body' || gear[e.gear]);
@@ -605,7 +606,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     st.remain = (phase === 'prep' ? PREP : WORK) * 1000;
     st.endAt = performance.now() + st.remain;
     const ex = plan[i];
-    if (phase === 'prep') say((i === 0 ? '第一个动作，' : '下一个，') + ex.name);
+    if (phase === 'prep') say((i === 0 ? '第一个动作，' : i === plan.length - 1 ? '最后一个，全力冲刺，' : '下一个，') + ex.name);
     else { beep(880, 250); say('开始'); }
     render();
   }
@@ -692,7 +693,9 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     $('ring').classList.toggle('prep', ph !== 'work');
     $('play').textContent = ph === 'idle' ? '开始 10 分钟' : ph === 'done' ? '再来一轮' : st.running ? '暂停' : '继续';
     $('phaseText').textContent = ph === 'idle' ? '按「开始」进入第一个动作的 10 秒准备'
-      : ph === 'prep' ? '准备姿势，10 秒后开始' : ph === 'work' ? (ex.sided ? '50 秒，过半时' + ex.sided : '50 秒，跟着节奏做') : '十分钟完成';
+      : ph === 'prep' ? '准备姿势，10 秒后开始'
+      : ph === 'work' ? (ex.cat.includes('finish') && st.i === plan.length - 1 ? '最后 50 秒，全力冲刺' : ex.sided ? '50 秒，过半时' + ex.sided : '50 秒，跟着节奏做')
+      : '十分钟完成';
     const nx = plan[st.i + 1];
     $('next').innerHTML = nx ? '下一个：<b></b>' : '这是最后一个动作';
     if (nx) $('next').querySelector('b').textContent = nx.name;
