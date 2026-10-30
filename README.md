@@ -6,6 +6,6 @@
 - 全程不跳，适合隔音不好的房间
 - 火柴人动画示范、倒计时、中文语音提示、每天完成次数（只存在本机浏览器）
 
-在线使用：https://tanna-qne.github.io/qishen-10min/
+在线使用：https://hedonotlikeme.com/qishen-10min/
 
 直接用浏览器打开 `index.html` 也能用。
