@@ -61,7 +61,10 @@ button:focus-visible{outline:3px solid var(--work);outline-offset:2px}
 
 .figure-box{background:var(--bg);border-radius:10px;aspect-ratio:4/3;max-width:100%;display:grid;place-items:center;overflow:hidden}
 .figure-box svg,.lib-fig svg{width:100%;height:100%;display:block}
-.photo{width:100%;height:100%;object-fit:contain;background:#fff;display:block;border-radius:inherit}
+.figure-box,.lib-fig{position:relative}
+.host3d{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px}
+.host3d:not([data-ready])::after{content:"3D 动画加载中…"}
+.stage3d{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
 .limb{fill:none;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round;stroke-width:9}
 .limb.far{stroke:var(--far)}
 .torso{fill:none;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round;stroke-width:11}
@@ -227,7 +230,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
   </section>
 </div>
 
-<script src="photos.js"></script>
+<script src="desk3d.js"></script>
 <script>
 (() => {
   const PREP = 10, WORK = 50;
@@ -429,8 +432,8 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
       cues:['6 后手上勾拳：稍微屈膝，从下往上打','接 3 前手勾拳','最后用 2 后手直拳收尾'],
       why:'近身组合，三个方向的出拳都练到。', easy:'每一拳之间停一下，先打准再加速。' },
   ];
-  // 照片动作（photos.js）
-  (window.PHOTO_LIB || []).forEach(e => LIB.push(Object.assign({ view:'photo', period:1.4, frames:[], img:'img/' + e.id + '/' }, e)));
+  // 3D 动画动作（desk3d.js）
+  (window.DESK3D_LIB || []).forEach(e => LIB.push(Object.assign({ view:'3d', period:1, frames:[], gear:'body', d3:e.id }, e)));
   const BY_ID = Object.fromEntries(LIB.map(e => [e.id, e]));
 
   // ---- 火柴人正向运动学 ----
@@ -476,20 +479,20 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     f.torso = mk('path', 'torso', g); f.legA = mk('path', 'limb', g); f.head = mk('circle', 'head', g);
     f.armA = mk('path', 'limb', g); f.bellA = mk('line', 'bell', g);
     f.head.setAttribute('r', L.head);
-    const img = document.createElement('img');
-    img.className = 'photo'; img.alt = label; img.loading = 'lazy'; img.hidden = true;
-    host.appendChild(img); f.img = img;
+    const host3d = document.createElement('div');
+    host3d.className = 'host3d'; host3d.hidden = true;
+    host.appendChild(host3d); f.host3d = host3d;
     return f;
   }
 
-  // 照片动作交替播放起始/结束两张图，其他动作画火柴人
-  function show(fig, ex, clock, half) {
-    const photo = !!ex.img;
-    fig.svg.style.display = photo ? 'none' : '';
-    fig.img.hidden = !photo;
-    if (!photo) { draw(fig, ex, pose(ex, clock, half)); return; }
-    const src = ex.img + (Math.floor(clock / ex.period) % 2) + '.jpg';
-    if (fig.img.getAttribute('src') !== src) { fig.img.setAttribute('src', src); fig.img.alt = ex.name; }
+  // 3D 动作交给页面底部的 Three.js 模块画，其他动作画火柴人
+  function show(fig, ex, clock, half, visible = true) {
+    const d3 = !!ex.d3;
+    fig.svg.style.display = d3 ? 'none' : '';
+    fig.host3d.hidden = !d3;
+    if (d3) { if (window.Desk3D) Desk3D.set(fig.host3d, ex.d3, clock, visible); return; }
+    if (window.Desk3D) Desk3D.off(fig.host3d);
+    draw(fig, ex, pose(ex, clock, half));
   }
 
   function placeBell(line, armPts, T) {
@@ -722,7 +725,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
   });
   const counts = LIB.reduce((m, e) => (m[e.gear] = (m[e.gear] || 0) + 1, m), {});
   $('libCount').textContent = '共 ' + LIB.length + ' 个动作：徒手 ' + counts.body + ' · 哑铃 ' + counts.db + ' · 单杠 ' + counts.bar +
-    '。其中 ' + LIB.filter(e => e.img).length + ' 个用照片示范，照片来自 free-exercise-db（公有领域）';
+    '。其中 ' + LIB.filter(e => e.d3).length + ' 个是 3D 木头人动画，来自开源项目 desk-break（MIT 许可）';
   $('filters').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     const f = b.dataset.f;
@@ -735,11 +738,11 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
   const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   let clock = 0, last = performance.now();
   function frame(now) {
-    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    const dt = Math.max(0, Math.min(0.1, (now - last) / 1000)); last = now;
     const paused = !st.running && (st.phase === 'prep' || st.phase === 'work');
     if (!paused) clock += dt;
     const ex = plan[st.i];
-    show(stageFig, ex, clock, st.phase === 'work' && st.half);
+    show(stageFig, ex, clock, st.phase === 'work' && st.half, st.phase !== 'done');
     libFigs.forEach(({ ex, fig, card }) => { if (!card.hidden) show(fig, ex, reduce ? ex.period * 0.3 : clock, false); });
     requestAnimationFrame(frame);
   }
@@ -780,4 +783,77 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
   setInterval(tick, 100);
   requestAnimationFrame(frame);
 })();
+</script>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
+<script type="module">
+// 3D 木头人：一块铺满窗口的透明画布，按每个 .host3d 的位置分区渲染（同 desk-break 的 gallery.html 做法）
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { clone } from 'three/addons/utils/SkeletonUtils.js';
+import { VIEWS, chair, lights } from './3d/player.js';
+
+const [meta, glb] = await Promise.all([
+  fetch('3d/exercises.json').then(r => r.json()),
+  new GLTFLoader().loadAsync('3d/exercises.glb'),
+]);
+const info = Object.fromEntries(meta.exercises.map(e => [e.id, e]));
+const canvas = document.createElement('canvas');
+canvas.className = 'stage3d';
+document.body.appendChild(canvas);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setScissorTest(true);
+const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 20);
+const cells = new Map();
+
+function cell(el) {
+  let c = cells.get(el);
+  if (!c) {
+    const scene = new THREE.Scene(), fig = clone(glb.scene), seat = chair();
+    fig.traverse(o => { if (o.isSkinnedMesh) o.frustumCulled = false; });
+    scene.add(fig, seat); lights(scene);
+    c = { scene, seat, mixer: new THREE.AnimationMixer(fig), id: null, t: 0, dur: 1, on: false, view: VIEWS.full };
+    cells.set(el, c);
+  }
+  return c;
+}
+
+window.Desk3D = {
+  set(el, id, t, on) {
+    const c = cell(el);
+    if (c.id !== id) {
+      c.mixer.stopAllAction();
+      const clip = THREE.AnimationClip.findByName(glb.animations, id);
+      if (clip) c.mixer.clipAction(clip).play();
+      const e = info[id] || {};
+      c.seat.visible = !!e.seated;
+      c.view = VIEWS[e.view] || VIEWS.full;
+      c.dur = clip ? clip.duration : 1;
+      c.id = id;
+      el.dataset.ready = '1';
+    }
+    c.t = t; c.on = on;
+  },
+  off(el) { const c = cells.get(el); if (c) c.on = false; },
+};
+
+renderer.setAnimationLoop(() => {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  renderer.setScissor(0, 0, w, h);
+  renderer.clear();
+  for (const [el, c] of cells) {
+    if (!c.on || !el.isConnected || !el.offsetParent) continue;
+    const r = el.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > h || r.width === 0) continue;
+    c.mixer.setTime(c.t % c.dur);
+    const y = h - r.bottom;
+    renderer.setViewport(r.left, y, r.width, r.height);
+    renderer.setScissor(r.left, y, r.width, r.height);
+    camera.position.set(...c.view[0]); camera.lookAt(...c.view[1]);
+    camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+    renderer.render(c.scene, camera);
+  }
+});
 </script>
