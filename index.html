@@ -243,7 +243,9 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
 <script src="desk3d.js"></script>
 <script>
 (() => {
-  const PREP = 10, WORK = 50;
+  // ?auto=1：后台提醒弹出的全屏窗口，自动开始，做完自动关闭；&fast=1 只用于测试（每个动作 3 秒）
+  const QS = new URLSearchParams(location.search), AUTO = QS.has('auto'), FAST = QS.has('fast');
+  const PREP = FAST ? 1 : 10, WORK = FAST ? 2 : 50;
   const GEAR = { body:'徒手', db:'哑铃', bar:'单杠' };
   const CAT = { warm:'热身', neck:'肩颈', lower:'下肢', push:'推', pull:'拉', box:'拳击', finish:'腿部冲刺' };
 
@@ -635,6 +637,11 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     try { if (wake) wake.release(); } catch (e) {}
     resetSit();
     render();
+    if (AUTO) {
+      document.title = '起身十分钟 · 已完成';   // 后台提醒看到这个标题也会关掉窗口
+      document.querySelector('#donePanel p').textContent = '今天第 ' + log[k] + ' 轮。窗口 3 秒后自动关闭。';
+      setTimeout(() => window.close(), 3000);
+    }
   }
   function start() {
     unlockAudio();
@@ -791,7 +798,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
   });
 
   // ---- 久坐计时：坐满 60 分钟提醒；授权后离开电脑 5 分钟以上会自动重新计时 ----
-  const SIT_MS = 60 * 60 * 1000, TITLE = '起身十分钟';
+  const SIT_MS = 60 * 60 * 1000, TITLE = AUTO ? '起身十分钟 · 锻炼中' : '起身十分钟';
   let sitStart = store.get('qishen-sit-start', 0);
   if (!sitStart || Date.now() - sitStart > 3 * SIT_MS) sitStart = Date.now();   // 太久以前的记录当作重新开始
   store.set('qishen-sit-start', sitStart);
@@ -803,6 +810,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     checkSit();
   }
   function checkSit() {
+    if (AUTO && st.phase === 'done') return;          // 保留“已完成”标题，等窗口关闭
     const busy = st.phase === 'prep' || st.phase === 'work';
     const ms = Date.now() - sitStart, min = Math.floor(ms / 60000);
     $('sitTime').textContent = min + ' 分钟';
@@ -857,6 +865,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
   });
 
   buildSeq();
+  if (AUTO) { st.running = true; go(0, 'prep'); }
   setInterval(tick, 100);
   requestAnimationFrame(frame);
 })();
