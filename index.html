@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 <title>起身十分钟</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232747C9'/%3E%3Ccircle cx='32' cy='14' r='6' fill='%23fff'/%3E%3Cpath d='M32 22v18M32 40l-9 14M32 40l9 14M20 24l12 6 12-6' stroke='%23fff' stroke-width='6' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,6 +42,8 @@ button:focus-visible{outline:3px solid var(--work);outline-offset:2px}
 .toggle{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px}
 .toggle[aria-pressed="true"]{border-color:var(--work);color:var(--work);background:var(--work-soft)}
 
+.alert{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--prep-soft);border:1px solid var(--prep);border-radius:12px;padding:12px 16px}
+.alert b{color:var(--prep);font-size:17px}
 .grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
 
@@ -146,9 +149,16 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     </div>
     <div class="hdr-right">
       <span class="pill">今天已完成 <b id="today">0</b> 轮</span>
-      <button class="toggle" id="voice" aria-pressed="true">语音提示：开</button>
+      <span class="pill">已坐 <b id="sitTime">0 分钟</b> / 60</span>
+      <button class="toggle" id="notify" aria-pressed="false">桌面通知：关</button>
+      <button class="toggle" id="voice" aria-pressed="false">声音：关</button>
     </div>
   </header>
+
+  <div class="alert" id="sitAlert" role="alert" hidden>
+    <b>已经坐满 1 小时了</b><span>起来做一轮十分钟吧。</span>
+    <button class="btn primary small" id="alertGo">现在开始</button>
+  </div>
 
   <div class="grid">
     <section class="stage" aria-live="polite">
@@ -577,7 +587,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
 
   // ---- 计时、语音、记录 ----
   const st = { i:0, phase:'idle', running:false, endAt:0, remain:PREP * 1000, half:false, lastSec:null };
-  let voiceOn = true, audio = null, wake = null;
+  let voiceOn = store.get('qishen-voice', false), audio = null, wake = null;
 
   function say(text) {
     if (!voiceOn || !('speechSynthesis' in window)) return;
@@ -623,6 +633,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     beep(660, 200); setTimeout(() => beep(990, 350), 220);
     say('完成，今天也动起来了');
     try { if (wake) wake.release(); } catch (e) {}
+    resetSit();
     render();
   }
   function start() {
@@ -709,6 +720,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     const locked = ph === 'prep' || ph === 'work';
     $('shuffle').disabled = locked; $('gearDb').disabled = locked; $('gearBar').disabled = locked;
     $('donePanel').hidden = ph !== 'done';
+    try { checkSit(); } catch (e) {}   // 页面初始化完成前久坐计时还没准备好
     renderTime();
   }
 
@@ -771,11 +783,73 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     });
   };
   gearBtn('gearDb', 'db'); gearBtn('gearBar', 'bar');
-  $('voice').addEventListener('click', e => {
-    voiceOn = !voiceOn; e.currentTarget.setAttribute('aria-pressed', voiceOn);
-    e.currentTarget.textContent = '语音提示：' + (voiceOn ? '开' : '关');
+  const showVoice = () => { $('voice').setAttribute('aria-pressed', voiceOn); $('voice').textContent = '声音：' + (voiceOn ? '开' : '关'); };
+  showVoice();
+  $('voice').addEventListener('click', () => {
+    voiceOn = !voiceOn; store.set('qishen-voice', voiceOn); showVoice();
     if (!voiceOn) try { speechSynthesis.cancel(); } catch (err) {}
   });
+
+  // ---- 久坐计时：坐满 60 分钟提醒；授权后离开电脑 5 分钟以上会自动重新计时 ----
+  const SIT_MS = 60 * 60 * 1000, TITLE = '起身十分钟';
+  let sitStart = store.get('qishen-sit-start', 0);
+  if (!sitStart || Date.now() - sitStart > 3 * SIT_MS) sitStart = Date.now();   // 太久以前的记录当作重新开始
+  store.set('qishen-sit-start', sitStart);
+  let notifyOn = store.get('qishen-notify', false), lastAlert = 0, titleFlip = false;
+  if (!('Notification' in window) || Notification.permission !== 'granted') notifyOn = false;
+
+  function resetSit() {
+    sitStart = Date.now(); store.set('qishen-sit-start', sitStart); lastAlert = 0;
+    checkSit();
+  }
+  function checkSit() {
+    const busy = st.phase === 'prep' || st.phase === 'work';
+    const ms = Date.now() - sitStart, min = Math.floor(ms / 60000);
+    $('sitTime').textContent = min + ' 分钟';
+    const due = ms >= SIT_MS && !busy;
+    $('sitAlert').hidden = !due;
+    if (!due) { if (document.title !== TITLE) document.title = TITLE; return; }
+    titleFlip = !titleFlip;
+    document.title = titleFlip ? '⏰ 该起来动一动了' : TITLE;
+    if (Date.now() - lastAlert < 10 * 60000) return;   // 一直没起来的话，每 10 分钟再提醒一次
+    lastAlert = Date.now();
+    if (!notifyOn) return;
+    try {
+      const n = new Notification(TITLE, { body: '已经坐了 ' + min + ' 分钟，起来做一轮吧。', tag: 'qishen', requireInteraction: true });
+      n.onclick = () => { window.focus(); n.close(); };
+    } catch (e) {}
+  }
+
+  async function startIdle() {
+    if (!('IdleDetector' in window)) return;
+    try {
+      const d = new IdleDetector();
+      let away = false;
+      d.addEventListener('change', () => {
+        if (d.userState === 'idle') away = true;
+        else if (away) { away = false; if (st.phase !== 'prep' && st.phase !== 'work') resetSit(); }
+      });
+      await d.start({ threshold: 5 * 60000 });
+    } catch (e) {}
+  }
+
+  const showNotify = () => { $('notify').setAttribute('aria-pressed', notifyOn); $('notify').textContent = '桌面通知：' + (notifyOn ? '开' : '关'); };
+  showNotify();
+  $('notify').addEventListener('click', async () => {
+    if (notifyOn) { notifyOn = false; store.set('qishen-notify', false); showNotify(); return; }
+    // 两个授权请求都要在点击当下发出
+    const pN = 'Notification' in window ? Notification.requestPermission() : Promise.resolve('denied');
+    const pI = 'IdleDetector' in window ? IdleDetector.requestPermission().catch(() => 'denied') : Promise.resolve('denied');
+    const [n, i] = await Promise.all([pN, pI]);
+    notifyOn = n === 'granted'; store.set('qishen-notify', notifyOn); showNotify();
+    if (i === 'granted') startIdle();
+  });
+  try {
+    navigator.permissions.query({ name: 'idle-detection' }).then(p => { if (p.state === 'granted') startIdle(); }).catch(() => {});
+  } catch (e) {}
+  $('alertGo').addEventListener('click', () => { if (st.phase !== 'prep' && st.phase !== 'work') start(); });
+  checkSit();
+  setInterval(checkSit, 15000);
   document.addEventListener('keydown', e => {
     if (e.code === 'Space' && e.target.closest('button')) return;
     if (e.code === 'Space') { e.preventDefault(); start(); }
