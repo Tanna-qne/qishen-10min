@@ -586,6 +586,12 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
       return ids.map(id => BY_ID[id]);
     return makePlan();
   })();
+  // 一轮一开始就记入历史，并把下一轮换成新动作存起来；全屏窗口做完自动关闭、下次重新打开也不会重复
+  let upcoming = null;
+  function rotate() {
+    history = [plan.map(e => e.id)].concat(history).slice(0, 2); store.set('qishen-history', history);
+    upcoming = makePlan();
+  }
 
   // ---- 计时、语音、记录 ----
   const st = { i:0, phase:'idle', running:false, endAt:0, remain:PREP * 1000, half:false, lastSec:null };
@@ -614,6 +620,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
   $('today').textContent = store.get('qishen-log', {})[todayKey()] || 0;
 
   function go(i, phase) {
+    if (st.phase === 'idle' || st.phase === 'done') rotate();
     st.i = i; st.phase = phase; st.half = false; st.lastSec = null;
     st.remain = (phase === 'prep' ? PREP : WORK) * 1000;
     st.endAt = performance.now() + st.remain;
@@ -631,7 +638,6 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
     st.phase = 'done'; st.running = false; st.remain = 0;
     const log = store.get('qishen-log', {}), k = todayKey(); log[k] = (log[k] || 0) + 1; store.set('qishen-log', log);
     $('today').textContent = log[k]; $('doneCount').textContent = log[k];
-    history = [plan.map(e => e.id)].concat(history).slice(0, 2); store.set('qishen-history', history);
     beep(660, 200); setTimeout(() => beep(990, 350), 220);
     say('完成，今天也动起来了');
     try { if (wake) wake.release(); } catch (e) {}
@@ -645,7 +651,7 @@ kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;bor
   }
   function start() {
     unlockAudio();
-    if (st.phase === 'done') { plan = makePlan(); buildSeq(); }
+    if (st.phase === 'done') { plan = upcoming || makePlan(); buildSeq(); }
     if (st.phase === 'idle' || st.phase === 'done') { st.running = true; go(0, 'prep'); return; }
     if (st.running) { st.running = false; st.remain = Math.max(0, st.endAt - performance.now()); }
     else { st.running = true; st.endAt = performance.now() + st.remain; }
